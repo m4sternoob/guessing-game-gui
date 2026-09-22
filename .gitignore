@@ -1,0 +1,32 @@
+# Build artifacts
+build/
+*.app/
+*.exe
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ImGui config
+imgui.ini
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Compiled objects
+*.o
+*.obj
+*.d
+
+# Logs
+*.log
