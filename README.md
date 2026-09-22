@@ -63,7 +63,7 @@ This project transforms the original console-based [day1-cpp-game](https://githu
 ### Pre-built App Bundle (Recommended)
 | File | Size | SHA256 |
 |------|------|--------|
-| [`GuessingGame-macOS-v1.0.0.zip`](https://github.com/m4sternoob/guessing-game-gui/releases/download/v1.0.0/GuessingGame-macOS-v1.0.0.zip) | ~1.5 MB | *pending release* |
+| [`GuessingGame-macOS-v1.0.0.zip`](https://github.com/m4sternoob/guessing-game-gui/releases/download/v1.0.0/GuessingGame-macOS-v1.0.0.zip) | ~1.5 MB | `332acce510a48b5e71424ccb8b83e5ced33cf003d7740f15a64d31d3bfd11c82` |
 
 **Install:**
 ```bash
