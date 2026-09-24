@@ -82,3 +82,6 @@ endif()
 
 # Install target
 install(TARGETS GuessingGame DESTINATION bin)
+
+# Console version (original foundation)
+add_subdirectory(console)

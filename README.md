@@ -145,6 +145,9 @@ guessing-game-gui/
 ├── build_macos.sh           # macOS one-command build script
 ├── build_windows.bat        # Windows one-command build script
 ├── README.md                # This file
+├── console/                 # Original console version (Day 1 foundation)
+│   ├── guessing_game.cpp    # Console game (~80 lines)
+│   └── CMakeLists.txt       # Console build config
 ├── imgui/                   # Dear ImGui source (vendored)
 │   ├── *.cpp / *.h
 │   └── backends/            # SDL2 + SDLRenderer2 backends
@@ -166,7 +169,7 @@ guessing-game-gui/
 
 ## 🔗 Related
 
-- **Original Console Game:** [m4sternoob/day1-cpp-game](https://github.com/m4sternoob/day1-cpp-game) — The Day 1 C++ learning project this GUI wraps
+- **Original Console Game (Day 1 Foundation):** [`console/guessing_game.cpp`](console/guessing_game.cpp) — The Day 1 C++ learning project this GUI wraps
 - **Dear ImGui:** https://github.com/ocornut/imgui
 - **SDL2:** https://www.libsdl.org/
 
