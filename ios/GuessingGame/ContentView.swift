@@ -1,5 +1,5 @@
 // ContentView.swift
-// Main container with flip-card animation between games
+// Main container with flip-card animation between games - iPhone 15 Portrait Optimized
 
 import SwiftUI
 
@@ -8,6 +8,8 @@ struct ContentView: View {
     @State private var isFlipping = false
     @State private var flipProgress: Double = 0
     @State private var flipDirection: FlipDirection = .toBack
+    @Environment(\.verticalSizeClass) var verticalSizeClass
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     enum GameType {
         case guessing
@@ -18,10 +20,24 @@ struct ContentView: View {
         case toBack, toFront
     }
     
+    // iPhone 15 portrait dimensions: 1179 x 2556
+    // Safe area: top ~59, bottom ~34
+    private var isPortrait: Bool {
+        verticalSizeClass == .regular && horizontalSizeClass == .compact
+    }
+    
+    private var cardWidth: CGFloat {
+        isPortrait ? UIScreen.main.bounds.width * 0.94 : UIScreen.main.bounds.width * 0.45
+    }
+    
+    private var cardHeight: CGFloat {
+        isPortrait ? UIScreen.main.bounds.height * 0.85 : UIScreen.main.bounds.height * 0.9
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Background
+                // Background - fixed to screen bounds
                 Color(red: 0.05, green: 0.06, blue: 0.09)
                     .ignoresSafeArea()
                 
@@ -29,7 +45,7 @@ struct ContentView: View {
                 GridBackground()
                     .ignoresSafeArea()
                 
-                // Flip card container
+                // Flip card container - centered with proper constraints
                 FlipCardView(
                     isFlipping: $isFlipping,
                     flipProgress: $flipProgress,
@@ -41,18 +57,19 @@ struct ContentView: View {
                         SnakeGameView(onFlip: { flipToGuessing() })
                     }
                 )
-                .frame(
-                    width: min(geometry.size.width * 0.92, 580),
-                    height: min(geometry.size.height * 0.88, 680)
+                .frame(width: cardWidth, height: cardHeight)
+                .position(
+                    x: geometry.size.width / 2,
+                    y: geometry.size.height / 2
                 )
-                .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                .clipped()
                 
                 // Flip progress indicator at top
                 if isFlipping {
                     VStack {
                         FlipProgressBar(progress: flipProgress, direction: flipDirection)
                             .frame(width: 280, height: 6)
-                            .padding(.top, 60)
+                            .padding(.top, geometry.safeAreaInsets.top + 20)
                         
                         // Game name transition
                         HStack(spacing: 20) {
@@ -70,9 +87,12 @@ struct ContentView: View {
                         
                         Spacer()
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
             }
         }
+        .statusBarHidden(false)
+        .preferredColorScheme(.dark)
     }
     
     private func flipToSnake() {
@@ -82,7 +102,6 @@ struct ContentView: View {
             isFlipping = true
             flipProgress = 0
         }
-        // Animate progress
         animateFlipProgress(to: 1.0) {
             currentGame = .snake
             isFlipping = false

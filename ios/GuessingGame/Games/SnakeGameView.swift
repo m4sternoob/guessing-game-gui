@@ -1,5 +1,5 @@
 // SnakeGameView.swift
-// iOS version of Snake Game with SwiftUI + SpriteKit
+// iOS version of Snake Game - iPhone 15 Portrait Optimized
 
 import SwiftUI
 import SpriteKit
@@ -8,95 +8,138 @@ struct SnakeGameView: View {
     let onFlip: () -> Void
     
     @StateObject private var gameModel = SnakeGameModel()
-    @State private var showGameOver = false
+    @Environment(\.verticalSizeClass) var verticalSizeClass
+    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    private var isPortrait: Bool {
+        verticalSizeClass == .regular && horizontalSizeClass == .compact
+    }
+    
+    private let safeAreaTop: CGFloat = 59
+    private let safeAreaBottom: CGFloat = 34
     
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: onFlip) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                            Text("Flip")
-                        }
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(Color(red: 0.15, green: 0.18, blue: 0.23))
-                        .cornerRadius(12)
-                    }
-                    Spacer()
-                    Text("Snake Game")
-                        .font(.title.bold())
-                        .foregroundColor(.white)
-                    Spacer()
-                    // Pause button
-                    Button(action: { gameModel.togglePause() }) {
-                        Image(systemName: gameModel.isPaused ? "play.fill" : "pause.fill")
-                            .font(.title2)
+        GeometryReader { geometry in
+            ZStack {
+                // Background - full screen
+                Color(red: 0.05, green: 0.06, blue: 0.09)
+                    .ignoresSafeArea()
+                
+                // Subtle grid pattern
+                GridBackground()
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Header with safe area
+                    HStack {
+                        Button(action: onFlip) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                Text("Flip")
+                            }
+                            .font(.headline)
                             .foregroundColor(.white)
-                            .padding(12)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
                             .background(Color(red: 0.15, green: 0.18, blue: 0.23))
-                            .cornerRadius(12)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 8)
-                
-                // Score bar
-                HStack {
-                    Text("Score: \(gameModel.score)")
-                        .font(.title3.bold())
-                        .foregroundColor(.white)
-                    Spacer()
-                    Text("Best: \(gameModel.highScore)")
-                        .font(.title3)
-                        .foregroundColor(Color(red: 0.6, green: 0.65, blue: 0.72))
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 8)
-                
-                Divider()
-                    .background(Color(red: 0.2, green: 0.22, blue: 0.28))
-                    .padding(.horizontal, 24)
-                
-                // Game area - SpriteKit view
-                SpriteView(scene: gameModel.scene, options: [.allowsTransparency])
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(red: 0.06, green: 0.07, blue: 0.1))
-                    .cornerRadius(16)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                
-                // Controls hint
-                VStack(spacing: 8) {
-                    Text("Swipe or use arrows to move")
-                        .font(.subheadline)
-                        .foregroundColor(Color(red: 0.5, green: 0.55, blue: 0.62))
-                    Text("Tap pause button or swipe with 2 fingers to pause")
-                        .font(.caption)
-                        .foregroundColor(Color(red: 0.4, green: 0.45, blue: 0.52))
-                }
-                .padding(.bottom, 20)
-                
-                // Restart button (shown when game over)
-                if gameModel.isGameOver {
-                    Button(action: { gameModel.restart() }) {
-                        Text("Restart")
+                            .cornerRadius(10)
+                        }
+                        Spacer()
+                        Text("Snake Game")
                             .font(.title2.bold())
                             .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(Color(red: 0.18, green: 0.65, blue: 0.3))
-                            .cornerRadius(16)
+                        Spacer()
+                        // Pause button
+                        Button(action: { gameModel.togglePause() }) {
+                            Image(systemName: gameModel.isPaused ? "play.fill" : "pause.fill")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .padding(10)
+                                .background(Color(red: 0.15, green: 0.18, blue: 0.23))
+                                .cornerRadius(10)
+                        }
                     }
-                    .buttonStyle(ScaleButtonStyle())
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 20)
-                    .transition(.scale.combined(with: .opacity))
+                    .padding(.horizontal, 16)
+                    .padding(.top, safeAreaTop + 8)
+                    .padding(.bottom, 8)
+                    
+                    // Score bar
+                    HStack {
+                        Text("Score: \(gameModel.score)")
+                            .font(.title3.bold())
+                            .foregroundColor(.white)
+                        Spacer()
+                        Text("Best: \(gameModel.highScore)")
+                            .font(.title3)
+                            .foregroundColor(Color(red: 0.6, green: 0.65, blue: 0.72))
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+                    
+                    Divider()
+                        .background(Color(red: 0.2, green: 0.22, blue: 0.28))
+                        .padding(.horizontal, 16)
+                    
+                    // Game area - SpriteKit view with proper constraints
+                    SpriteView(scene: gameModel.scene, options: [.allowsTransparency])
+                        .frame(
+                            width: min(geometry.size.width - 32, geometry.size.height * 0.55),
+                            height: min(geometry.size.width - 32, geometry.size.height * 0.55)
+                        )
+                        .background(Color(red: 0.06, green: 0.07, blue: 0.1))
+                        .cornerRadius(12)
+                        .padding(.vertical, 8)
+                        // Add swipe gesture for snake control
+                        .gesture(
+                            DragGesture(minimumDistance: 20)
+                                .onEnded { value in
+                                    gameModel.handleSwipe(value.translation)
+                                }
+                        )
+                    
+                    // Controls hint
+                    VStack(spacing: 6) {
+                        Text("Swipe to move • Tap pause button to pause")
+                            .font(.subheadline)
+                            .foregroundColor(Color(red: 0.5, green: 0.55, blue: 0.62))
+                        Text("Swipe with 2 fingers or tap pause")
+                            .font(.caption)
+                            .foregroundColor(Color(red: 0.4, green: 0.45, blue: 0.52))
+                    }
+                    .padding(.bottom, 12)
+                    
+                    // Restart button (shown when game over)
+                    if gameModel.isGameOver {
+                        VStack(spacing: 12) {
+                            Text("GAME OVER")
+                                .font(.title2.bold())
+                                .foregroundColor(Color(red: 1.0, green: 0.31, blue: 0.31))
+                            
+                            Text("Final Score: \(gameModel.score)")
+                                .font(.title3)
+                                .foregroundColor(Color(red: 0.78, green: 0.78, blue: 0.86))
+                            
+                            Button(action: { gameModel.restart() }) {
+                                Text("Restart")
+                                    .font(.title3.bold())
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(Color(red: 0.18, green: 0.65, blue: 0.3))
+                                    .cornerRadius(12)
+                            }
+                            .buttonStyle(ScaleButtonStyle())
+                            .padding(.horizontal, 40)
+                        }
+                        .padding(.vertical, 24)
+                        .background(Color(red: 0.08, green: 0.09, blue: 0.12))
+                        .cornerRadius(16)
+                        .padding(.horizontal, 24)
+                        .transition(.scale.combined(with: .opacity))
+                        .padding(.bottom, safeAreaBottom + 12)
+                    }
+                    
+                    Spacer(minLength: 0)
                 }
             }
             .onAppear {
@@ -106,7 +149,7 @@ struct SnakeGameView: View {
     }
 }
 
-// SpriteKit scene for smooth 60fps rendering
+// SpriteKit scene for smooth 60fps rendering - Portrait Optimized
 class SnakeScene: SKScene {
     weak var gameModel: SnakeGameModel?
     
@@ -134,7 +177,8 @@ class SnakeScene: SKScene {
     }
     
     private func calculateLayout(view: SKView) {
-        let padding: CGFloat = 20
+        // Square grid centered in view
+        let padding: CGFloat = 16
         let availableWidth = view.bounds.width - padding * 2
         let availableHeight = view.bounds.height - padding * 2
         cellSize = min(availableWidth / CGFloat(gridSize), availableHeight / CGFloat(gridSize))
@@ -297,17 +341,17 @@ class SnakeScene: SKScene {
             
             let gameOverLabel = SKLabelNode(text: "GAME OVER")
             gameOverLabel.fontName = "SFProDisplay-Bold"
-            gameOverLabel.fontSize = 36
+            gameOverLabel.fontSize = 28
             gameOverLabel.fontColor = SKColor(red: 1.0, green: 0.31, blue: 0.31, alpha: 1.0)
-            gameOverLabel.position = CGPoint(x: frame.midX, y: frame.midY + 30)
+            gameOverLabel.position = CGPoint(x: frame.midX, y: frame.midY + 20)
             gameOverLabel.verticalAlignmentMode = .center
             addChild(gameOverLabel)
             
             let scoreLabel = SKLabelNode(text: "Final Score: \(model.score)")
             scoreLabel.fontName = "SFProDisplay-Regular"
-            scoreLabel.fontSize = 24
+            scoreLabel.fontSize = 20
             scoreLabel.fontColor = SKColor(red: 0.78, green: 0.78, blue: 0.86, alpha: 1.0)
-            scoreLabel.position = CGPoint(x: frame.midX, y: frame.midY - 20)
+            scoreLabel.position = CGPoint(x: frame.midX, y: frame.midY - 15)
             scoreLabel.verticalAlignmentMode = .center
             addChild(scoreLabel)
         } else if model.isPaused {
@@ -318,7 +362,7 @@ class SnakeScene: SKScene {
             
             let pausedLabel = SKLabelNode(text: "PAUSED")
             pausedLabel.fontName = "SFProDisplay-Bold"
-            pausedLabel.fontSize = 36
+            pausedLabel.fontSize = 28
             pausedLabel.fontColor = SKColor(red: 1.0, green: 0.78, blue: 0.31, alpha: 1.0)
             pausedLabel.position = CGPoint(x: frame.midX, y: frame.midY)
             pausedLabel.verticalAlignmentMode = .center
@@ -354,7 +398,7 @@ class SnakeGameModel: ObservableObject {
     }
     
     func setupGestures() {
-        // Gestures handled by SpriteKit view
+        // Swipe gestures handled by SwiftUI view
     }
     
     func setDirection(_ dir: SnakeDirection) {
@@ -477,6 +521,28 @@ class SnakeGameModel: ObservableObject {
     
     private func saveHighScore() {
         UserDefaults.standard.set(highScore, forKey: "snake_highscore")
+    }
+    
+    // Handle swipe gestures from SwiftUI
+    func handleSwipe(_ translation: CGSize) {
+        let absX = abs(translation.width)
+        let absY = abs(translation.height)
+        
+        if absX > absY {
+            // Horizontal swipe
+            if translation.width > 0 {
+                setDirection(.right)
+            } else {
+                setDirection(.left)
+            }
+        } else {
+            // Vertical swipe
+            if translation.height > 0 {
+                setDirection(.down)
+            } else {
+                setDirection(.up)
+            }
+        }
     }
 }
 
