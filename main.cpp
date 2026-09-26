@@ -588,8 +588,18 @@ void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
 // SNAKE GAME UI
 // ============================================================================
 void render_snake_game(AppState& app, ImGuiViewport* vp, float s) {
-    float win_w = 580.0f * s;
-    float win_h = 680.0f * s;
+    // Calculate grid dimensions first
+    float cell = app.snake_game.get_cell_size() * s;
+    int gw = app.snake_game.get_grid_width();
+    int gh = app.snake_game.get_grid_height();
+    float grid_w = gw * cell;
+    float grid_h = gh * cell;
+    
+    // Window size based on grid + UI padding
+    float ui_top = 140.0f * s;  // Space for header + score
+    float ui_bottom = 140.0f * s; // Space for controls + buttons
+    float win_w = std::max(580.0f * s, grid_w + 48.0f * s);
+    float win_h = std::max(680.0f * s, grid_h + ui_top + ui_bottom);
     
     ImGui::SetNextWindowPos(ImVec2(
         vp->WorkPos.x + (vp->WorkSize.x - win_w) * 0.5f,
@@ -624,12 +634,7 @@ void render_snake_game(AppState& app, ImGuiViewport* vp, float s) {
     ImGui::Separator();
     ImGui::Spacing();
     
-    // Game grid area
-    float cell = snake.get_cell_size() * s;
-    int gw = snake.get_grid_width();
-    int gh = snake.get_grid_height();
-    float grid_w = gw * cell;
-    float grid_h = gh * cell;
+    // Game grid area - centered in window
     float grid_x = win_pos.x + (win_size.x - grid_w) * 0.5f;
     float grid_y = win_pos.y + 140.0f * s;
     
@@ -699,7 +704,7 @@ void render_snake_game(AppState& app, ImGuiViewport* vp, float s) {
         }
     }
     
-    // Game over overlay
+    // Game over overlay - centered on grid
     if (state.game_over) {
         ImVec2 center(grid_x + grid_w * 0.5f, grid_y + grid_h * 0.5f);
         // Semi-transparent overlay
@@ -727,6 +732,9 @@ void render_snake_game(AppState& app, ImGuiViewport* vp, float s) {
             IM_COL32(255, 200, 80, 255), "PAUSED"
         );
     }
+    
+    // Reserve space for grid in layout
+    ImGui::Dummy(ImVec2(grid_w, grid_h + 140.0f * s));
     
     ImGui::Spacing();
     ImGui::Spacing();
