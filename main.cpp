@@ -103,10 +103,10 @@ struct GuessingGameState {
 struct AppState {
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
-    int window_width = 1280;
-    int window_height = 720;
+    int window_width = 720;
+    int window_height = 1280;
     float dpi_scale = 1.0f;
-    float ui_scale = 1.5f;  // Larger UI scale
+    float ui_scale = 1.0f;  // Smaller UI scale for portrait
     bool renderer_dirty = false;
     uint64_t last_frame_time = 0;
     float delta_time = 0.016f;
@@ -846,11 +846,11 @@ int main(int argc, char* argv[]) {
     
     SDL_WindowFlags flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
     app.window = SDL_CreateWindow("Guessing Game Hub", 
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, flags);
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 720, 1280, flags);  // Portrait: 720x1280
     if (!app.window) { SDL_Log("Window failed: %s", SDL_GetError()); SDL_Quit(); return 1; }
     
     int dw, dh; SDL_GL_GetDrawableSize(app.window, &dw, &dh);
-    app.dpi_scale = (float)dw / 1280.0f;
+    app.dpi_scale = (float)dw / 720.0f;
     
     app.renderer = SDL_CreateRenderer(app.window, -1,
         SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
@@ -864,7 +864,9 @@ int main(int argc, char* argv[]) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
-    io.ConfigWindowsMoveFromTitleBarOnly = true;
+    // Disable multi-viewport - SDL2 renderer doesn't support it
+    // io.ConfigFlags &= ~ImGuiConfigFlags_ViewportsEnable;
+    io.ConfigWindowsMoveFromTitleBarOnly = false;
     
     apply_enhanced_style(app.dpi_scale, app.ui_scale);
     io.FontGlobalScale = app.dpi_scale * app.ui_scale;
