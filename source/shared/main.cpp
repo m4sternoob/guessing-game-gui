@@ -361,13 +361,13 @@ void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
     ImVec2 win_size = ImGui::GetWindowSize();
     float content_w = win_w - 40.0f * s;  // Content width with margins
     
-    // Use child window for scrolling
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    // Use child window for scrolling - simplified style management
     ImGui::BeginChild("##GameScroll", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_HorizontalScrollbar);
+    
+    // Push style vars for the child content
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20 * s, 20 * s));
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(12 * s, 10 * s));
     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12 * s, 10 * s));
-    ImGui::PopStyleVar();  // Pop WindowPadding from BeginChild
     
     // Header
     ImGui::SetCursorPosX((content_w - ImGui::CalcTextSize("Guessing Game").x) * 0.5f);
@@ -568,7 +568,6 @@ void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
     
     ImGui::PopStyleVar(3);  // ItemSpacing, FramePadding, WindowPadding
     ImGui::EndChild();
-    ImGui::PopStyleVar();  // WindowPadding from BeginChild
     ImGui::End();
 }
 
