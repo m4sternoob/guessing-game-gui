@@ -339,12 +339,11 @@ void draw_background_grid(ImDrawList* dl, ImGuiViewport* vp, float scale) {
 }
 
 // ============================================================================
-// GUESSING GAME UI
+// GUESSING GAME UI - Compact Portrait Layout with Scrolling
 // ============================================================================
 void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
-    float win_w = 580.0f * s;
-    float win_h = 680.0f * s;
-    float cw = win_w - 48.0f * s;  // content width
+    float win_w = 680.0f * s;   // Leave margins
+    float win_h = 1200.0f * s;  // Taller than window for scrolling content
     
     ImGui::SetNextWindowPos(ImVec2(
         vp->WorkPos.x + (vp->WorkSize.x - win_w) * 0.5f,
@@ -354,22 +353,27 @@ void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
     
     ImGui::Begin("##GuessingGame", nullptr, 
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-        ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar);
+        ImGuiWindowFlags_NoCollapse);
     
     auto& g = app.guessing_game;
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 win_pos = ImGui::GetWindowPos();
     ImVec2 win_size = ImGui::GetWindowSize();
+    float content_w = win_w - 40.0f * s;  // Content width with margins
     
-    // Header with flip button
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12 * s, 8 * s));
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10 * s, 8 * s));
+    // Use child window for scrolling
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+    ImGui::BeginChild("##GameScroll", ImVec2(0, 0), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(20 * s, 20 * s));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(12 * s, 10 * s));
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12 * s, 10 * s));
+    ImGui::PopStyleVar();  // Pop WindowPadding from BeginChild
     
-    // Game title
-    ImGui::SetCursorPosX((win_size.x - ImGui::CalcTextSize("Guessing Game").x) * 0.5f);
+    // Header
+    ImGui::SetCursorPosX((content_w - ImGui::CalcTextSize("Guessing Game").x) * 0.5f);
     ImGui::TextColored(ImVec4(0.95f, 0.96f, 0.98f, 1.0f), "Guessing Game");
     
-    ImGui::SetCursorPosX((win_size.x - ImGui::CalcTextSize("Guess the secret number").x) * 0.5f);
+    ImGui::SetCursorPosX((content_w - ImGui::CalcTextSize("Guess the secret number").x) * 0.5f);
     ImGui::TextColored(ImVec4(0.60f, 0.65f, 0.72f, 1.00f), "Guess the secret number");
     
     ImGui::Spacing();
@@ -377,61 +381,52 @@ void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
     ImGui::Spacing();
     
     if (!g.game_started) {
-        // SETUP PHASE
-        
-        // Range label
+        // SETUP PHASE - Compact
         ImGui::Text("Range");
         ImGui::Spacing();
         
-        // Min/Max inputs - larger
-        float iw = (cw - 16.0f * s) * 0.5f;
+        float iw = (content_w - 12 * s) * 0.5f;
         ImGui::PushItemWidth(iw);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(14 * s, 12 * s));
         
-        // Use local buffers for input
         static char min_buf[32] = "1";
         static char max_buf[32] = "100";
-        ImGui::InputText("##Min", min_buf, 32, ImGuiInputTextFlags_CharsDecimal);
-        ImGui::SameLine(0, 16 * s);
-        ImGui::InputText("##Max", max_buf, 32, ImGuiInputTextFlags_CharsDecimal);
+        ImGui::InputText("Min", min_buf, 32, ImGuiInputTextFlags_CharsDecimal);
+        ImGui::SameLine(0, 12 * s);
+        ImGui::InputText("Max", max_buf, 32, ImGuiInputTextFlags_CharsDecimal);
         ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
         
         ImGui::Spacing();
         ImGui::Spacing();
         
-        // Start button - BIG
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(20 * s, 16 * s));
-        if (ImGui::Button("Start Game", ImVec2(-1, 60 * s))) {
+        if (ImGui::Button("Start Game", ImVec2(-1, 50 * s))) {
             g.min_range = std::max(1, std::atoi(min_buf));
             g.max_range = std::max(g.min_range + 1, std::atoi(max_buf));
             snprintf(min_buf, 32, "%d", g.min_range);
             snprintf(max_buf, 32, "%d", g.max_range);
             g.start_game();
         }
-        ImGui::PopStyleVar();
         
     } else if (!g.game_won) {
-        // PLAYING PHASE
+        // PLAYING PHASE - Compact
         
         // Info bar
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.60f, 0.65f, 0.72f, 1.00f));
-        ImGui::Text("Range: %d - %d    Attempts: %d", g.min_range, g.max_range, g.attempts);
+        ImGui::Text("Range: %d - %d   Attempts: %d", g.min_range, g.max_range, g.attempts);
         ImGui::PopStyleColor();
         
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::Spacing();
         
-        // Message with animation
+        // Message
         ImVec4 msg_col = ImVec4(0.92f, 0.93f, 0.95f, 1.00f);
         if (g.message.find("low") != std::string::npos) msg_col = ImVec4(1.00f, 0.75f, 0.30f, 1.00f);
         else if (g.message.find("high") != std::string::npos) msg_col = ImVec4(1.00f, 0.45f, 0.45f, 1.00f);
         else if (g.message.find("must be") != std::string::npos) msg_col = ImVec4(1.00f, 0.35f, 0.35f, 1.00f);
         
         ImGui::PushStyleColor(ImGuiCol_Text, msg_col);
-        ImGui::PushTextWrapPos(win_w - 60 * s);
-        ImGui::SetCursorPosX((win_size.x - ImGui::CalcTextSize(g.message.c_str()).x) * 0.5f);
+        ImGui::PushTextWrapPos(content_w);
+        ImGui::SetCursorPosX((content_w - ImGui::CalcTextSize(g.message.c_str()).x) * 0.5f);
         ImGui::TextWrapped("%s", g.message.c_str());
         ImGui::PopTextWrapPos();
         ImGui::PopStyleColor();
@@ -440,34 +435,32 @@ void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
         ImGui::Separator();
         ImGui::Spacing();
         
-        // Guess input - LARGE
+        // Guess input
         ImGui::Text("Your Guess");
         ImGui::PushItemWidth(-1);
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(16 * s, 14 * s));
         static char guess_buf[32] = "";
         bool enter = ImGui::InputText("##Guess", guess_buf, 32, 
             ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_EnterReturnsTrue);
         ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
         
         ImGui::Spacing();
         
-        // Big Guess button
-        float bw = (cw - 16.0f * s) * 0.5f;
-        if (ImGui::Button("Guess", ImVec2(bw, 56 * s)) || enter) {
+        // Guess + Clear buttons
+        float bw = (content_w - 12 * s) * 0.5f;
+        if (ImGui::Button("Guess", ImVec2(bw, 48 * s)) || enter) {
             g.guess = std::atoi(guess_buf);
             g.make_guess();
             guess_buf[0] = '\0';
         }
-        ImGui::SameLine(0, 16 * s);
-        if (ImGui::Button("Clear", ImVec2(bw, 56 * s))) {
+        ImGui::SameLine(0, 12 * s);
+        if (ImGui::Button("Clear", ImVec2(bw, 48 * s))) {
             guess_buf[0] = '\0';
         }
         
         ImGui::Spacing();
         ImGui::Spacing();
         
-        // Quick picks - larger buttons
+        // Quick picks - 2 rows of 3
         ImGui::Text("Quick Picks");
         ImGui::Spacing();
         
@@ -475,35 +468,34 @@ void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.18f, 0.20f, 0.26f, 1.00f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.22f, 0.24f, 0.30f, 1.00f));
         
-        float qp_w = (cw - 32.0f * s) * 0.2f;
+        float qp_w = (content_w - 24 * s) / 3.0f;
         int mid = (g.min_range + g.max_range) / 2;
         int q1 = (g.min_range + mid) / 2;
         int q3 = (mid + g.max_range) / 2;
         
         auto qp_btn = [&](const char* label, int val) {
-            if (ImGui::Button(label, ImVec2(qp_w, 44 * s))) { g.guess = val; g.make_guess(); }
+            if (ImGui::Button(label, ImVec2(qp_w, 40 * s))) { g.guess = val; g.make_guess(); }
         };
         
-        qp_btn("Min", g.min_range); ImGui::SameLine(0, 8 * s);
-        qp_btn("25%", q1); ImGui::SameLine(0, 8 * s);
-        qp_btn("50%", mid); ImGui::SameLine(0, 8 * s);
-        qp_btn("75%", q3); ImGui::SameLine(0, 8 * s);
+        // Row 1
+        qp_btn("Min", g.min_range); ImGui::SameLine(0, 12 * s);
+        qp_btn("25%", q1); ImGui::SameLine(0, 12 * s);
+        qp_btn("50%", mid);
+        ImGui::Spacing();
+        // Row 2
+        qp_btn("75%", q3); ImGui::SameLine(0, 12 * s);
         qp_btn("Max", g.max_range);
         
         ImGui::PopStyleColor(3);
         
-        // History
+        // History - compact
         if (!g.guess_history.empty()) {
             ImGui::Spacing();
             ImGui::Separator();
             ImGui::Spacing();
             
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.60f, 0.65f, 0.72f, 1.00f));
             ImGui::Text("History (%zu)", g.guess_history.size());
-            ImGui::PopStyleColor();
-            
-            ImGui::BeginChild("Hist", ImVec2(0, 180 * s), true,
-                ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_HorizontalScrollbar);
+            ImGui::BeginChild("History", ImVec2(0, 160 * s), true, ImGuiWindowFlags_HorizontalScrollbar);
             
             for (int i = (int)g.guess_history.size() - 1; i >= 0; --i) {
                 int val = g.guess_history[i];
@@ -521,22 +513,21 @@ void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
         }
         
     } else {
-        // WON STATE - with celebration
+        // WON STATE - Compact celebration
         ImGui::Spacing();
         ImGui::Spacing();
         
-        // Big win message
-        ImGui::SetCursorPosX((win_size.x - ImGui::CalcTextSize("YOU WON!").x) * 0.5f);
+        ImGui::SetCursorPosX((content_w - ImGui::CalcTextSize("YOU WON!").x) * 0.5f);
         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.40f, 0.95f, 0.40f, 1.00f));
         ImGui::Text("YOU WON!");
         ImGui::PopStyleColor();
         
         ImGui::Spacing();
         
-        ImGui::SetCursorPosX((win_size.x - ImGui::CalcTextSize("The number was").x) * 0.5f);
+        ImGui::SetCursorPosX((content_w - ImGui::CalcTextSize("The number was").x) * 0.5f);
         ImGui::TextColored(ImVec4(0.80f, 0.85f, 0.90f, 1.00f), "The number was %d", g.secret_number);
         
-        ImGui::SetCursorPosX((win_size.x - ImGui::CalcTextSize("Guessed in X attempts!").x) * 0.5f);
+        ImGui::SetCursorPosX((content_w - ImGui::CalcTextSize("Guessed in X attempts!").x) * 0.5f);
         ImGui::TextColored(ImVec4(0.80f, 0.85f, 0.90f, 1.00f), "Guessed in %d attempt%s!", g.attempts, g.attempts == 1 ? "" : "s");
         
         ImGui::Spacing();
@@ -545,28 +536,19 @@ void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
         ImGui::Spacing();
         ImGui::Spacing();
         
-        // Play again - BIG
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.18f, 0.65f, 0.30f, 1.00f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.25f, 0.75f, 0.35f, 1.00f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.14f, 0.50f, 0.25f, 1.00f));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(20 * s, 16 * s));
-        if (ImGui::Button("Play Again", ImVec2(-1, 60 * s))) {
+        if (ImGui::Button("Play Again", ImVec2(-1, 50 * s))) {
             g.reset();
         }
-        ImGui::PopStyleVar();
-        ImGui::PopStyleColor(3);
         
         ImGui::Spacing();
         
-        // New range button
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(16 * s, 10 * s));
-        if (ImGui::Button("New Range", ImVec2(-1, 48 * s))) {
+        if (ImGui::Button("New Range", ImVec2(-1, 44 * s))) {
             g.reset();
         }
-        ImGui::PopStyleVar();
     }
     
     // Flip button at bottom
+    ImGui::Spacing();
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
@@ -580,7 +562,13 @@ void render_guessing_game(AppState& app, ImGuiViewport* vp, float s) {
     }
     ImGui::PopStyleColor(3);
     
-    ImGui::PopStyleVar(2);
+    // Bottom padding
+    ImGui::Spacing();
+    ImGui::Spacing();
+    
+    ImGui::PopStyleVar(3);  // ItemSpacing, FramePadding, WindowPadding
+    ImGui::EndChild();
+    ImGui::PopStyleVar();  // WindowPadding from BeginChild
     ImGui::End();
 }
 
