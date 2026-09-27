@@ -6,7 +6,7 @@
 
 set -e  # Exit on error
 
-echo "🔨 Building Guessing Game GUI for macOS..."
+echo "🔨 Building Guessing Game Hub for macOS..."
 
 # Check for dependencies
 if ! command -v cmake &> /dev/null; then
@@ -19,11 +19,11 @@ if ! command -v sdl2-config &> /dev/null; then
     exit 1
 fi
 
-# Create build directory
+# Create build directory (from repo root)
 mkdir -p build
 cd build
 
-# Configure with CMake
+# Configure with CMake (CMakeLists.txt is in parent dir)
 echo "⚙️  Configuring with CMake..."
 cmake ..
 

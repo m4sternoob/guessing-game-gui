@@ -43,20 +43,21 @@ endforeach()
 # Also add standard SDL2 include path
 list(APPEND SDL2_INCLUDE_DIRS "/opt/homebrew/include/SDL2")
 
-# Include directories
+# Include directories - updated for new source structure
 include_directories(${SDL2_INCLUDE_DIRS})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/imgui)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source/shared)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source/shared/imgui)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/source/shared/imgui/backends)
 
 # Source files
 set(SOURCES
-    main.cpp
-    imgui/imgui.cpp
-    imgui/imgui_draw.cpp
-    imgui/imgui_tables.cpp
-    imgui/imgui_widgets.cpp
-    imgui/backends/imgui_impl_sdl2.cpp
-    imgui/backends/imgui_impl_sdlrenderer2.cpp
+    source/shared/main.cpp
+    source/shared/imgui/imgui.cpp
+    source/shared/imgui/imgui_draw.cpp
+    source/shared/imgui/imgui_tables.cpp
+    source/shared/imgui/imgui_widgets.cpp
+    source/shared/imgui/backends/imgui_impl_sdl2.cpp
+    source/shared/imgui/backends/imgui_impl_sdlrenderer2.cpp
 )
 
 add_executable(GuessingGame ${SOURCES})
@@ -76,7 +77,7 @@ elseif(APPLE)
     # macOS: create app bundle
     set_target_properties(GuessingGame PROPERTIES
         MACOSX_BUNDLE TRUE
-        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/source/macos/Info.plist
     )
 endif()
 
@@ -84,4 +85,4 @@ endif()
 install(TARGETS GuessingGame DESTINATION bin)
 
 # Console version (original foundation)
-add_subdirectory(console)
+add_subdirectory(source/shared/console)

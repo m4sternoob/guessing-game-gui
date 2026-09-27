@@ -3,15 +3,16 @@
 <div align="center">
 
 ![C++](https://img.shields.io/badge/C++-17-blue.svg)
-![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)
-![GUI](https://img.shields.io/badge/GUI-Dear%20ImGui%20%2B%20SDL2-green.svg)
+![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)
+![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Windows%20%7C%20iOS%20%7C%20Linux-lightgrey.svg)
+![GUI](https://img.shields.io/badge/Gui-Desktop%3A%20ImGui%20%2B%20SDL2%20%7C%20iOS%3A%20SwiftUI%20%2B%20SpriteKit-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Build](https://img.shields.io/badge/Build-CMake-orange.svg)
-![Version](https://img.shields.io/badge/Version-v2.0.0-brightgreen.svg)
+![Build](https://img.shields.io/badge/Build-CMake%20%7C%20Xcode-orange.svg)
+![Version](https://img.shields.io/badge/Version-v2.2.0-brightgreen.svg)
 
-**A modern, cross-platform game hub with two games in one — Guessing Game & Snake — featuring smooth flip-card animations, particle effects, and a polished dark theme. Built with Dear ImGui + SDL2.**
+**A cross-platform game hub with two games in one — Guessing Game & Snake — featuring smooth flip-card animations, particle effects, and polished UI. Desktop: C++/ImGui/SDL2. iOS: SwiftUI/SpriteKit.**
 
-[📥 Download Source](#-download-source) • [🍎 macOS Build](#-macos-build) • [🪟 Windows Build](#-windows-build) • [📱 iOS Version](#-ios-version) • [🗺️ Roadmap](#-roadmap)
+[📥 Download Source](#-download-source) • [🍎 macOS Build](#-macos-build) • [🪟 Windows Build](#-windows-build) • [📱 iOS Build](#-ios-build) • [🗺️ Roadmap](#-roadmap)
 
 </div>
 
@@ -19,59 +20,74 @@
 
 ## 🎮 Overview
 
-This project evolved from a simple console-based [Day 1 C++ learning exercise](https://github.com/m4sternoob/day1-cpp-game) into a **full-featured desktop game hub** with two games, smooth animations, and professional polish. Built as a showcase of cross-platform C++ GUI development using **Dear ImGui** (immediate-mode GUI, standard in game dev) and **SDL2** (window/renderer/input abstraction).
+A modern game hub with **two games** sharing a flip-card interface:
+- **Guessing Game** — Binary-search style number guessing with confetti celebration
+- **Snake Game** — Classic 20×20 grid snake with high-score persistence
 
-### Why ImGui + SDL2?
-
-| Aspect | Benefit |
-|--------|---------|
-| **Lightweight** | ~1.6 MB binary, no heavy runtime dependencies |
-| **Game-dev native** | Immediate mode, 60 FPS, no retained widget tree |
-| **True cross-platform** | Identical code on macOS, Windows, Linux |
-| **Zero boilerplate** | No MFC, Win32, Cocoa, or Qt object hierarchies |
-| **Customizable** | Full theming via `ImGuiStyle` |
+**Desktop:** C++17 + Dear ImGui + SDL2 (single codebase, macOS/Windows/Linux)  
+**iOS:** Swift 5.9 + SwiftUI + SpriteKit (native iPhone 15 portrait)
 
 ---
 
-## ✨ Features v2.0.0
+## ✨ Features
 
-### 🔄 Flip-Card Animation
-- Smooth 3D-style flip between **Guessing Game** ↔ **Snake Game**
+### 🔄 Flip-Card Animation (Both Platforms)
+- Smooth 3D-style flip between games (600ms, cubic easing)
 - Progress bar + fading game names during transition
-- 600ms duration with cubic easing
 
-### 🎯 Guessing Game (Enhanced)
-- **BIG buttons** — 60px height for Start/Guess/Play Again
-- **Larger inputs** — Comfortable padding, clear labels
-- **Quick picks** — Min/25%/50%/75%/Max for binary-search strategy
-- **Win celebration** — Centered animated message + **confetti burst**
-- **Color-coded history** — 🟡 low, 🔴 high, 🟢 correct
-- **Persistent UI scale** — Adjustable 1.0x–2.5x in Settings
+### 🎯 Guessing Game
+- Binary-search strategy with quick-pick buttons (Min/25%/50%/75%/Max)
+- Confetti burst on win (desktop: ImGui particles, iOS: SwiftUI Canvas)
+- Color-coded history: 🟡 low, 🔴 high, 🟢 correct
+- Error validation with toast notifications
 
-### 🐍 Snake Game (New!)
-- **20×20 grid** with smooth 24px cells (auto-scaled)
-- **Gradient body** — Bright head, darker tail segments
-- **Animated eyes** — Direction-aware on head segment
-- **Pulsing food** — Red apple with inner glow animation
-- **Full mechanics** — Wall collision, self-collision, growing body
-- **Progressive difficulty** — Speed increases every 50 points
-- **High score persistence** — Survives app restarts
-- **Pause/Resume** — Spacebar or button
-- **Controls** — WASD / Arrow Keys / Gamepad
+### 🐍 Snake Game
+- 20×20 grid, gradient body, animated eyes, pulsing food
+- Wall/self collision, progressive speed increase
+- High-score persistence (UserDefaults on iOS, JSON on desktop)
+- Pause/Resume, Restart
+- **Desktop:** WASD/Arrows/Gamepad | **iOS:** Swipe gestures
 
-### 🎨 Visual Polish
-- **Rich slate/blue theme** — Deep backgrounds, vibrant accent
-- **16px window rounding** — 12px child, 10px controls
-- **Generous spacing** — Touch-friendly 48px+ targets
-- **Particle system** — Gravity-based confetti with fade-out
-- **High-DPI/Retina ready** — Integer scaling, crisp at any size
+### 🎨 Visual Theme
+- **Dark slate/blue palette** — Deep backgrounds (#0D0F14), vibrant accent (#3399FF)
+- **Portrait mode** — 720×1280 desktop, native iPhone 15 (393×852) iOS
+- **Smaller UI elements** — Compact, information-dense layouts
 
-### ⚙️ Technical
-- **Delta-time game loop** — Frame-rate independent
-- **Renderer recreation** — Handles resize without distortion
-- **Config persistence** — JSON in platform-appropriate dir
-- **Settings panel** — UI scale slider, auto-save
-- **Console version preserved** — Original foundation in `console/`
+---
+
+## 📁 Project Structure
+
+```
+guessing-game-hub/
+├── source/
+│   ├── shared/                    # Cross-platform C++ core
+│   │   ├── main.cpp               # Desktop entry (ImGui + SDL2)
+│   │   ├── snake_game.h           # Snake logic (grid, collision, persistence)
+│   │   ├── animation.h            # Flip animation, easing, particles
+│   │   ├── imgui/                 # Dear ImGui (vendored)
+│   │   │   ├── *.cpp / *.h
+│   │   │   └── backends/          # SDL2 + SDLRenderer2
+│   │   └── console/               # Original Day 1 foundation
+│   │       ├── guessing_game.cpp
+│   │       └── CMakeLists.txt
+│   ├── macos/                     # macOS-specific
+│   │   ├── build_macos.sh         # One-command build
+│   │   └── Info.plist             # App bundle metadata
+│   ├── windows/                   # Windows-specific
+│   │   └── build_windows.bat      # vcpkg + VS2022 build
+│   └── ios/                       # iOS (SwiftUI + SpriteKit)
+│       ├── GuessingGameApp.swift
+│       ├── ContentView.swift      # Flip container
+│       ├── Components/
+│       │   └── FlipCardView.swift
+│       └── Games/
+│           ├── GuessingGameView.swift
+│           └── SnakeGameView.swift
+├── CMakeLists.txt                 # Cross-platform desktop build
+├── README.md                      # This file
+├── ROADMAP.md                     # Development roadmap
+└── .gitignore
+```
 
 ---
 
@@ -90,17 +106,15 @@ This project evolved from a simple console-based [Day 1 C++ learning exercise](h
 
 ## 🍎 macOS Build
 
-### Pre-built App Bundle (Recommended)
+### Pre-built App Bundle (v2.2.0)
 
 | File | Size | SHA256 |
 |------|------|--------|
-| [`GuessingGame-macOS-v2.0.0.zip`](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.0.0/GuessingGame-macOS-v2.0.0.zip) | ~1.6 MB | `61b3f11ad03dd92b716074f017f42ab275c64bbbf6fd1451d320c9f03537f17a` |
+| [`GuessingGame-macOS-v2.2.0.zip`](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.2.0/GuessingGame-macOS-v2.2.0.zip) | ~1.6 MB | `94d6a6e979e53714149e2c22ea12cc9a1db4e72ab3d03b3a09ea89c4294e70d5` |
 
 **Install:**
 ```bash
-# Download and unzip
-unzip GuessingGame-macOS-v2.0.0.zip
-# Run directly (no install needed)
+unzip GuessingGame-macOS-v2.2.0.zip
 open GuessingGame.app
 ```
 
@@ -114,8 +128,8 @@ brew install cmake sdl2
 # Build
 git clone https://github.com/m4sternoob/guessing-game-gui.git
 cd guessing-game-gui
-chmod +x build_macos.sh
-./build_macos.sh
+chmod +x source/macos/build_macos.sh
+./source/macos/build_macos.sh
 
 # Run
 open build/GuessingGame.app
@@ -135,7 +149,7 @@ REM 4. Set VCPKG_ROOT env var to vcpkg directory
 
 git clone https://github.com/m4sternoob/guessing-game-gui.git
 cd guessing-game-gui
-build_windows.bat
+source\windows\build_windows.bat
 
 REM Output: build\Release\GuessingGame.exe
 ```
@@ -146,92 +160,78 @@ REM Output: build\Release\GuessingGame.exe
 
 ---
 
-## 📱 iOS Version
+## 📱 iOS Build
 
-**Status:** Planned — separate native Swift/SwiftUI implementation
+### Requirements
+- **Xcode 15+** (Swift 5.9)
+- **iOS 17+** deployment target
+- **iPhone 15** (393×852 pt) or compatible
 
-### Target: `guessing-game-ios` (separate repo)
-- **Native iOS** — SwiftUI + SpriteKit
-- **Same flip UX** — Tap to flip between games
-- **Touch-optimized** — Swipe for snake, keypad for guessing
-- **Haptics** — UIImpactFeedbackGenerator for actions
-- **Safe areas** — Dynamic Island, home indicator support
-- **App Store ready** — Bundle ID, icons, privacy manifest
+### Setup
+```bash
+# 1. Clone
+git clone https://github.com/m4sternoob/guessing-game-gui.git
+cd guessing-game-gui
 
-### Structure (when created)
+# 2. Open in Xcode
+open source/ios/
 ```
-ios/
-├── GuessingGame.xcodeproj/
-├── GuessingGame/
-│   ├── GuessingGameApp.swift
-│   ├── ContentView.swift
-│   ├── Games/
-│   │   ├── GuessingGameView.swift
-│   │   └── SnakeGameView.swift
-│   ├── Components/
-│   │   └── FlipCardView.swift
-│   └── Assets.xcassets/
-└── README.md
-```
+
+### Xcode Configuration
+1. **Create new project:** iOS App → SwiftUI → Swift
+2. **Bundle ID:** `com.yourname.guessinggamehub`
+3. **Deployment Target:** iOS 17.0
+4. **Supported Orientations:** Portrait only (uncheck Landscape)
+5. **Add files:** Drag `source/ios/` contents into Xcode project
+6. **Assets.xcassets:** Add AppIcon (all sizes), AccentColor (#3399FF)
+7. **Info.plist:** Add `UIRequiresFullScreen = YES`, `UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait`
+
+### Build & Run
+- **Simulator:** Select iPhone 15 Pro → ▶️ Run
+- **Device:** Connect iPhone → Select device → ▶️ Run
+- **TestFlight:** Product → Archive → Distribute App
+
+### iOS-Specific Features
+| Feature | Implementation |
+|---------|----------------|
+| **Portrait Lock** | `UISupportedInterfaceOrientations = Portrait` |
+| **Safe Areas** | 59pt top (Dynamic Island), 34pt bottom |
+| **Flip Animation** | SwiftUI `.rotation3DEffect` + spring |
+| **Snake Controls** | `DragGesture` on SpriteView |
+| **Confetti** | `Canvas` + `TimelineView` particles |
+| **Haptics** | `UIImpactFeedbackGenerator` on actions |
+| **Persistence** | `UserDefaults` for high score |
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Component | Version | Purpose |
-|-----------|---------|---------|
-| **C++** | 17 | Core language |
-| **Dear ImGui** | Latest (docking branch) | Immediate-mode GUI |
-| **SDL2** | 2.28+ | Window, renderer, input |
-| **CMake** | 3.16+ | Cross-platform build |
-| **std::mt19937** | C++11 | Cryptographic-quality RNG |
-
----
-
-## 📁 Project Structure
-
-```
-guessing-game-gui/
-├── main.cpp                 # Enhanced hub: flip, snake, particles, settings (~980 lines)
-├── snake_game.h             # Snake logic (grid, movement, collision, persistence)
-├── animation.h              # Flip animation, easing, particle system
-├── CMakeLists.txt           # Cross-platform build config
-├── Info.plist               # macOS app bundle metadata
-├── build_macos.sh           # macOS one-command build script
-├── build_windows.bat        # Windows one-command build script
-├── ROADMAP.md               # Development roadmap
-├── README.md                # This file
-├── console/                 # Original console version (Day 1 foundation)
-│   ├── guessing_game.cpp    # Console game (~80 lines)
-│   └── CMakeLists.txt       # Console build config
-├── ios/                     # iOS starter (planned - Phase 3)
-│   └── (SwiftUI project)
-├── imgui/                   # Dear ImGui source (vendored)
-│   ├── *.cpp / *.h
-│   └── backends/            # SDL2 + SDLRenderer2 backends
-└── build/                   # Build output (gitignored)
-```
+| Platform | Language | GUI Framework | Build System |
+|----------|----------|---------------|--------------|
+| **Desktop** | C++17 | Dear ImGui + SDL2 | CMake 3.16+ |
+| **iOS** | Swift 5.9 | SwiftUI + SpriteKit | Xcode 15+ |
+| **Shared Logic** | — | Algorithm ports | Manual sync |
 
 ---
 
 ## 🎯 How to Play
 
 ### Guessing Game
-1. **Launch** — Window opens at 1280×720, centered
+1. **Launch** — Portrait window (720×1280 desktop / full screen iOS)
 2. **Set Range** — Enter min/max (default 1–100)
-3. **Click "Start Game"** — Random number generated
-4. **Guess** — Type number + Enter, or click "Guess"
-5. **Use Quick Picks** — Min/25%/50%/75%/Max for optimal binary search
-6. **Win** — Confetti burst! Click "Play Again" or "New Range"
+3. **Start Game** — Random number generated
+4. **Guess** — Type + Enter (desktop) / Keypad (iOS)
+5. **Quick Picks** — Min/25%/50%/75%/Max for optimal binary search
+6. **Win** — Confetti! Tap "Play Again" or "New Range"
 
 ### Snake Game
-1. **Flip** — Click "Flip to Snake Game" (bottom button)
-2. **Control** — WASD / Arrow Keys / Gamepad D-pad
-3. **Eat** — Red pulsing food grows snake +10 points
+1. **Flip** — Tap "Flip" button (bottom)
+2. **Control** — Desktop: WASD/Arrows | iOS: Swipe on game area
+3. **Eat** — Red pulsing food = +10 points, snake grows
 4. **Avoid** — Walls and self-collision
-5. **Pause** — Spacebar or "Pause" button
-6. **Restart** — R key or "Restart" button after game over
-7. **Flip back** — Click "Flip to Guessing Game"
+5. **Pause** — Space (desktop) / Pause button (iOS)
+6. **Restart** — R key / Restart button after game over
+7. **Flip Back** — Tap "Flip" to return
 
 ---
 
@@ -239,22 +239,26 @@ guessing-game-gui/
 
 | Phase | Target | Status |
 |-------|--------|--------|
-| **1. Foundation** | Core GUI, guessing game, macOS/Windows build | ✅ v1.0.0 |
+| **1. Foundation** | Core desktop GUI, guessing game, macOS/Windows build | ✅ v1.0.0 |
 | **2. Enhanced Desktop** | Flip animation, Snake game, particles, settings | ✅ v2.0.0 |
-| **3. iOS Native** | SwiftUI app, touch controls, App Store | 📋 Planned |
+| **3. iOS Native** | SwiftUI app, touch controls, TestFlight | ✅ v2.2.0 |
 | **4. Platform Polish** | Notarization, NSIS installer, Linux AppImage | 📋 Planned |
-| **5. CI/CD** | GitHub Actions, auto-release, checksums | 📋 Planned |
+| **5. CI/CD** | GitHub Actions (macOS/Windows/Linux/iOS), auto-release | 📋 Planned |
 
 See [ROADMAP.md](ROADMAP.md) for detailed milestones.
 
 ---
 
-## 🔗 Related
+## 🔗 Links
 
-- **Original Console Game (Day 1 Foundation):** [`console/guessing_game.cpp`](console/guessing_game.cpp)
-- **Development Roadmap:** [`ROADMAP.md`](ROADMAP.md)
-- **Dear ImGui:** https://github.com/ocornut/imgui
-- **SDL2:** https://www.libsdl.org/
+| Platform | Link |
+|----------|------|
+| **Repository** | https://github.com/m4sternoob/guessing-game-gui |
+| **Releases** | https://github.com/m4sternoob/guessing-game-gui/releases |
+| **macOS v2.2.0** | [Download](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.2.0/GuessingGame-macOS-v2.2.0.zip) |
+| **iOS Source** | `source/ios/` |
+| **Windows Build** | `source/windows/build_windows.bat` |
+| **macOS Build** | `source/macos/build_macos.sh` |
 
 ---
 
@@ -274,8 +278,8 @@ in the Software without restriction...
 
 <div align="center">
 
-**Built with ❤️ as a cross-platform C++ GUI learning exercise — now a dual-game hub!**
+**Built with ❤️ as a cross-platform learning exercise — C++/ImGui desktop + SwiftUI iOS**
 
-*If this helped you learn ImGui/SDL2/CMake, consider ⭐ the repo!*
+*If this helped you learn ImGui/SDL2/CMake or SwiftUI/SpriteKit, consider ⭐ the repo!*
 
 </div>
