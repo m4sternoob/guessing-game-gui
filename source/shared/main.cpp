@@ -844,33 +844,53 @@ int main(int argc, char* argv[]) {
     app.config_path = get_config_dir() + "/config.json";
     load_config(app);
     
+    // Create window FIRST
     SDL_WindowFlags flags = (SDL_WindowFlags)(SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_HIDDEN);
     app.window = SDL_CreateWindow("Guessing Game Hub", 
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 720, 1280, flags);  // Portrait: 720x1280
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 720, 1280, flags);
     if (!app.window) { SDL_Log("Window failed: %s", SDL_GetError()); SDL_Quit(); return 1; }
     
+    // Get actual drawable size for DPI calculation
     int dw, dh; SDL_GL_GetDrawableSize(app.window, &dw, &dh);
+    app.window_width = 720;
+    app.window_height = 1280;
     app.dpi_scale = (float)dw / 720.0f;
+    if (app.dpi_scale < 1.0f) app.dpi_scale = 1.0f;
+    if (app.dpi_scale > 3.0f) app.dpi_scale = 3.0f;
     
+    // Create renderer
     app.renderer = SDL_CreateRenderer(app.window, -1,
         SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
     if (!app.renderer) { SDL_Log("Renderer failed: %s", SDL_GetError()); SDL_DestroyWindow(app.window); SDL_Quit(); return 1; }
     
+    // Set logical size BEFORE showing window - this is critical for ImGui viewport framebuffer
     SDL_RenderSetLogicalSize(app.renderer, app.window_width, app.window_height);
     SDL_RenderSetIntegerScale(app.renderer, SDL_TRUE);
+    
+    // Show window AFTER renderer is configured
     SDL_ShowWindow(app.window);
+    
+    // Small delay to let window system settle
+    SDL_Delay(10);
+    
+    // Verify drawable size again after showing
+    SDL_GL_GetDrawableSize(app.window, &dw, &dh);
+    app.dpi_scale = (float)dw / 720.0f;
+    if (app.dpi_scale < 1.0f) app.dpi_scale = 1.0f;
+    if (app.dpi_scale > 3.0f) app.dpi_scale = 3.0f;
     
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_NavEnableGamepad;
-    // Disable multi-viewport - SDL2 renderer doesn't support it
-    // io.ConfigFlags &= ~ImGuiConfigFlags_ViewportsEnable;
+    // Explicitly disable multi-viewport - SDL2 renderer doesn't support it
+    // io.ConfigFlags &= ~ImGuiConfigFlags_ViewportsEnable;  // Not available in this ImGui version
     io.ConfigWindowsMoveFromTitleBarOnly = false;
     
     apply_enhanced_style(app.dpi_scale, app.ui_scale);
     io.FontGlobalScale = app.dpi_scale * app.ui_scale;
     io.Fonts->AddFontDefault();
+    io.Fonts->Build();  // Ensure font atlas is built before renderer init
     
     ImGui_ImplSDL2_InitForSDLRenderer(app.window, app.renderer);
     ImGui_ImplSDLRenderer2_Init(app.renderer);
