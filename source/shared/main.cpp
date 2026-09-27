@@ -890,7 +890,7 @@ int main(int argc, char* argv[]) {
     apply_enhanced_style(app.dpi_scale, app.ui_scale);
     io.FontGlobalScale = app.dpi_scale * app.ui_scale;
     io.Fonts->AddFontDefault();
-    io.Fonts->Build();  // Ensure font atlas is built before renderer init
+    // io.Fonts->Build();  // Not needed - SDL2 renderer backend handles this automatically
     
     ImGui_ImplSDL2_InitForSDLRenderer(app.window, app.renderer);
     ImGui_ImplSDLRenderer2_Init(app.renderer);
