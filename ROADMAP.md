@@ -11,14 +11,14 @@
 
 ---
 
-## 🚧 Phase 2: Enhanced Desktop GUI (v2.0.0 - IN PROGRESS)
-- [ ] **Flip-card animation** — 3D flip between Guessing Game ↔ Snake Game
-- [ ] **Larger UI scale** — Bigger fonts (1.4x), buttons, touch-friendly targets (min 48px)
-- [ ] **Snake Game** — Classic snake with score, growth, wall collision, game over
-- [ ] **Animations** — Smooth transitions, particle/confetti effects, easing curves
-- [ ] **Shared menu bar** — Game selector (tabs), settings, about
-- [ ] **Persistence** — High scores saved to disk (JSON)
-- [ ] **Sound effects** — Beeps for actions, win/lose sounds (optional)
+## ✅ Phase 2: Enhanced Desktop GUI (COMPLETED v2.0.0)
+- [x] **Flip-card animation** — 3D flip between Guessing Game ↔ Snake Game
+- [x] **Larger UI scale** — Bigger fonts (1.4x), buttons, touch-friendly targets (min 48px)
+- [x] **Snake Game** — Classic snake with score, growth, wall collision, game over
+- [x] **Animations** — Smooth transitions, particle/confetti effects, easing curves
+- [x] **Shared menu bar** — Game selector (tabs), settings, about
+- [x] **Persistence** — High scores saved to disk (JSON)
+- [x] **Sound effects** — Beeps for actions, win/lose sounds (optional)
 
 ---
 
