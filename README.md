@@ -8,7 +8,7 @@
 ![GUI](https://img.shields.io/badge/Gui-Desktop%3A%20ImGui%20%2B%20SDL2%20%7C%20iOS%3A%20SwiftUI%20%2B%20SpriteKit-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Build](https://img.shields.io/badge/Build-CMake%20%7C%20Xcode-orange.svg)
-![Version](https://img.shields.io/badge/Version-v2.2.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-v2.5.0-brightgreen.svg)
 
 **A cross-platform game hub with two games in one — Guessing Game & Snake — featuring smooth flip-card animations, particle effects, and polished UI. Desktop: C++/ImGui/SDL2. iOS: SwiftUI/SpriteKit.**
 
@@ -106,15 +106,15 @@ guessing-game-hub/
 
 ## 🍎 macOS Build
 
-### Pre-built App Bundle (v2.2.0)
+### Pre-built App Bundle (v2.5.0)
 
 | File | Size | SHA256 |
 |------|------|--------|
-| [`GuessingGame-macOS-v2.2.0.zip`](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.2.0/GuessingGame-macOS-v2.2.0.zip) | ~1.6 MB | `94d6a6e979e53714149e2c22ea12cc9a1db4e72ab3d03b3a09ea89c4294e70d5` |
+| [`GuessingGame-macOS-v2.5.0.zip`](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.5.0/GuessingGame-macOS-v2.5.0.zip) | ~0.5 MB | `9a43ecef67baa2b001e8ddbe4af09865ed2da726fcd22e1bc74b6e7b29157b93` |
 
 **Install:**
 ```bash
-unzip GuessingGame-macOS-v2.2.0.zip
+unzip GuessingGame-macOS-v2.5.0.zip
 open GuessingGame.app
 ```
 
@@ -255,7 +255,7 @@ See [ROADMAP.md](ROADMAP.md) for detailed milestones.
 |----------|------|
 | **Repository** | https://github.com/m4sternoob/guessing-game-gui |
 | **Releases** | https://github.com/m4sternoob/guessing-game-gui/releases |
-| **macOS v2.2.0** | [Download](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.2.0/GuessingGame-macOS-v2.2.0.zip) |
+| **macOS v2.5.0** | [Download](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.5.0/GuessingGame-macOS-v2.5.0.zip) |
 | **iOS Source** | `source/ios/` |
 | **Windows Build** | `source/windows/build_windows.bat` |
 | **macOS Build** | `source/macos/build_macos.sh` |
