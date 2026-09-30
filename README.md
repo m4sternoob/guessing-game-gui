@@ -8,7 +8,7 @@
 ![GUI](https://img.shields.io/badge/Gui-Desktop%3A%20ImGui%20%2B%20SDL2%20%7C%20iOS%3A%20SwiftUI%20%2B%20SpriteKit-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Build](https://img.shields.io/badge/Build-CMake%20%7C%20Xcode-orange.svg)
-![Version](https://img.shields.io/badge/Version-v2.5.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-v2.5.1-brightgreen.svg)
 
 **A cross-platform game hub with two games in one — Guessing Game & Snake — featuring smooth flip-card animations, particle effects, and polished UI. Desktop: C++/ImGui/SDL2. iOS: SwiftUI/SpriteKit.**
 
