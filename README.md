@@ -106,19 +106,19 @@ guessing-game-hub/
 
 ## 🍎 macOS Build
 
-### Pre-built App Bundle (v2.5.0)
+### Pre-built App Bundle (v2.5.1)
 
 | File | Size | SHA256 |
 |------|------|--------|
-| [`GuessingGame-macOS-v2.5.0.zip`](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.5.0/GuessingGame-macOS-v2.5.0.zip) | ~0.5 MB | `9a43ecef67baa2b001e8ddbe4af09865ed2da726fcd22e1bc74b6e7b29157b93` |
+| [`GuessingGame-macOS-v2.5.1.zip`](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.5.1/GuessingGame-macOS-v2.5.1.zip) | ~1.0 MB | `e45df2ef85d729f517fa83908c4454a80ce4a2e03b468255f5716f4ccfdb7043` |
 
 **Install:**
 ```bash
-unzip GuessingGame-macOS-v2.5.0.zip
+unzip GuessingGame-macOS-v2.5.1.zip
 open GuessingGame.app
 ```
 
-**Requirements:** macOS 10.13+ (High Sierra), Apple Silicon or Intel
+**Requirements:** macOS 11+ (Big Sur), Apple Silicon (arm64)
 
 ### Build from Source
 ```bash
@@ -255,7 +255,7 @@ See [ROADMAP.md](ROADMAP.md) for detailed milestones.
 |----------|------|
 | **Repository** | https://github.com/m4sternoob/guessing-game-gui |
 | **Releases** | https://github.com/m4sternoob/guessing-game-gui/releases |
-| **macOS v2.5.0** | [Download](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.5.0/GuessingGame-macOS-v2.5.0.zip) |
+| **macOS v2.5.1** | [Download](https://github.com/m4sternoob/guessing-game-gui/releases/download/v2.5.1/GuessingGame-macOS-v2.5.1.zip) |
 | **iOS Source** | `source/ios/` |
 | **Windows Build** | `source/windows/build_windows.bat` |
 | **macOS Build** | `source/macos/build_macos.sh` |
