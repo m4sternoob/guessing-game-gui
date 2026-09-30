@@ -1,0 +1,64 @@
+name: Build macOS app
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install cmake sdl2
+
+      - name: Shim hardcoded Homebrew paths
+        run: |
+          SDL_PREFIX="$(brew --prefix sdl2)"
+          sudo mkdir -p /opt/homebrew/lib /opt/homebrew/include
+          sudo ln -sf "$SDL_PREFIX/lib/libSDL2.dylib" /opt/homebrew/lib/libSDL2.dylib
+          sudo ln -sf "$SDL_PREFIX/lib/libSDL2main.a" /opt/homebrew/lib/libSDL2main.a
+          sudo ln -sf "$SDL_PREFIX/include/SDL2" /opt/homebrew/include/SDL2
+          ls -la /opt/homebrew/lib/libSDL2.dylib /opt/homebrew/include/SDL2
+
+      - name: Configure and build
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          make -j$(sysctl -n hw.ncpu)
+
+      - name: Bundle SDL2 inside the app
+        run: |
+          APP="build/GuessingGame.app"
+          BIN="$APP/Contents/MacOS/GuessingGame"
+          SDL_DYLIB="$(otool -L "$BIN" | grep -o '/[^ ]*libSDL2[^ ]*\.dylib' | head -1)"
+          echo "Found SDL2 dylib: $SDL_DYLIB"
+          mkdir -p "$APP/Contents/Frameworks"
+          cp "$SDL_DYLIB" "$APP/Contents/Frameworks/"
+          install_name_tool -change "$SDL_DYLIB" "@executable_path/../Frameworks/$(basename "$SDL_DYLIB")" "$BIN"
+          echo "--- linked libraries after fix ---"
+          otool -L "$BIN"
+
+      - name: Ad-hoc code sign
+        run: |
+          codesign --force --deep --sign - "build/GuessingGame.app"
+          codesign --verify --verbose "build/GuessingGame.app"
+
+      - name: Package and checksum
+        run: |
+          cd build
+          zip -r -y -q "../GuessingGame-macOS-v2.5.2.zip" "GuessingGame.app"
+          cd ..
+          shasum -a 256 GuessingGame-macOS-v2.5.2.zip
+          ls -la GuessingGame-macOS-v2.5.2.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GuessingGame-macOS-v2.5.2
+          path: GuessingGame-macOS-v2.5.2.zip
