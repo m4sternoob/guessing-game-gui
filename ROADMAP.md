@@ -12,12 +12,13 @@ Five games, one native macOS app. This is the living plan — checked off as thi
 - [ ] Ship v3.1.1 build, verify signature + linked libs, user playtests all five games
 
 ## v3.2 — Gameplay depth
-- [ ] Snake: pause menu, game-over stats (length, time survived)
-- [ ] Guessing: streak tracking, daily-challenge style fixed seed mode
-- [ ] Ludo: 4-player mode (you + 3 CPU), faster CPU animation toggle
-- [ ] Snakes & Ladders: 2-player local pass-and-play
-- [ ] Tic-Tac-Toe: score streaks, "CPU thinks" indicator polish
-- [ ] Sound effects (subtle, mutable, off by default on first launch)
+- [x] Snake: pause menu, game-over stats (length, time survived)
+- [x] Guessing: streak tracking, daily-challenge style fixed seed mode
+- [x] Ludo: 4-player mode (you + 3 CPU), faster CPU animation toggle
+- [x] Snakes & Ladders: 2-player local pass-and-play
+- [x] Tic-Tac-Toe: score streaks, "CPU thinks" indicator polish
+- [x] Sound effects (subtle, mutable, off by default on first launch)
+- [ ] Ship v3.2.0 build, verify signature + linked libs, user playtests all five games
 
 ## v3.3 — Social & sharing
 - [ ] Export/share score cards (PNG) for each game

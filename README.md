@@ -6,7 +6,7 @@
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-macOS-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-macOS%2014%2B-lightgrey.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/Version-v3.1.1-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-v3.2.0-brightgreen.svg)
 
 **Five games, one native macOS app — built with SwiftUI + SpriteKit, zero dependencies.**
 
@@ -15,6 +15,17 @@
 </div>
 
 ---
+
+## What's new in v3.2.0
+
+Gameplay depth across all five games, plus subtle system-sound effects (off by
+default — toggle the speaker in the toolbar):
+
+- **Snake** — pause menu (`Space`/`P`, Resume/Restart) and game-over stats: length + time survived
+- **Guessing** — persisted win streaks and a **daily challenge**: same number for everyone, seeded by the date, 1–100 with 10 attempts
+- **Ludo** — 4-player mode (you + 3 CPU) with a **Fast CPU** animation toggle
+- **Snakes & Ladders** — 2-player local pass-and-play
+- **Tic-Tac-Toe** — win streaks and an animated "CPU is thinking" indicator
 
 ## What's new in v3.1.1
 
@@ -37,6 +48,7 @@ in whichever game is active.
 - **Hot/cold proximity meter** (🧊 → 🚀) and a live "possible range" readout that narrows as you guess
 - Quick picks (Min / 25% / 50% / 75% / Max), color-coded history (↑ too low, ↓ too high, ✓ correct)
 - Best score per difficulty, lifetime games played + average attempts + win rate
+- **Win streaks** (persisted) and a **daily challenge** — same date-seeded number for everyone, 1–100, 10 attempts
 - Confetti on win, error toasts, `Return` submits
 
 ### 🐍 Snake
@@ -44,28 +56,31 @@ in whichever game is active.
 - **Speed selector** (Chill / Normal / Insane) and a **combo multiplier** for chained quick pickups
 - **Wrap-walls mode** toggle, floating score popups, eat particles, death shake
 - Speeds up as you eat; high score saved on your Mac
-- **Arrow keys or WASD** to steer, `Space` to pause, clickable direction pad
+- **Arrow keys or WASD** to steer, `Space`/`P` to pause, clickable direction pad
+- **Pause menu** (Resume/Restart) and game-over stats: final length + time survived
 
 ### 🪜 Snakes & Ladders
 - Classic 100-square board with ladders, snakes, and exact-roll-to-win
 - You (blue) vs the CPU (red) — animated dice, hop-by-hop token movement
+- **2-player local pass-and-play** — hand the Mac to a friend
 - Win/loss record saved on your Mac
 
 ### 🎲 Ludo
 - Full 15×15 board: bases, safe ★ squares, home stretches, captures
 - You (red) vs the CPU (yellow) — roll 6 to leave base, extra rolls on 6s and captures
+- **4-player mode** (you + 3 CPUs) and a **Fast CPU** toggle for snappier turns
 - Glowing tokens show your legal moves; CPU plays a real strategy (captures first, then racing home)
 
 ### ⭕ Tic-Tac-Toe
 - You are X, CPU is O — Easy (casual) and Hard (unbeatable minimax) difficulties
-- Winning-line highlight, score + draw tracking
+- Winning-line highlight, score + draw tracking, **win streaks**, animated CPU-thinking dots
 
 ## ⬇️ Download
 
 Grab the latest `.zip` from the [**Releases**](https://github.com/m4sternoob/guessing-game-gui/releases) page,
 unzip, and open `5IN1.app`. Requires macOS 14 (Sonoma) or later, Apple Silicon or Intel.
 
-> The v3.1.1 release build is being finalized — it will appear on the Releases page once published.
+> The v3.2.0 release build is being finalized — it will appear on the Releases page once published.
 
 ## 🔨 Build from source
 
@@ -114,6 +129,7 @@ source/ios/                    # iOS/SwiftUI version (separate target)
 
 ## 📜 Version history
 
+- **v3.2.0** — gameplay depth: snake pause + run stats, guessing streaks + daily challenge, 4-player Ludo, 2-player Snakes & Ladders, TTT streaks + thinking indicator, subtle sound FX (off by default)
 - **v3.1.1** — five-game 5IN1: + Snakes & Ladders, Ludo, Tic-Tac-Toe; guessing hot/cold meter; snake wrap mode + juice
 - **v3.0.0** — from-scratch native macOS rewrite (Swift/SwiftUI/SpriteKit)
 - **v2.5.x** — C++/SDL2 builds (broken, superseded)
