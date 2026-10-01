@@ -1,7 +1,8 @@
 import SwiftUI
 
-// Snakes & Ladders — you (blue) vs the CPU (red). Roll the dice, hop along,
-// climb ladders, dodge snakes. Exact roll needed to win on 100.
+// Snakes & Ladders — vs the CPU, or 2-player local pass-and-play.
+// Roll the dice, hop along, climb ladders, dodge snakes.
+// Exact roll needed to win on 100.
 
 final class SnakesLaddersModel: ObservableObject {
 
@@ -23,6 +24,8 @@ final class SnakesLaddersModel: ObservableObject {
     @Published var message = "Your turn — tap the dice."
     @Published var playerWins = 0
     @Published var cpuWins = 0
+    /// false = you vs CPU, true = two humans passing one Mac back and forth.
+    @Published var twoPlayer = false
 
     /// Bumps on every newGame(); stale delayed callbacks bail when it mismatches.
     private var generation = 0
@@ -40,21 +43,36 @@ final class SnakesLaddersModel: ObservableObject {
         diceValue = 1
         rolling = false
         winner = nil
-        message = "Your turn — tap the dice."
+        message = twoPlayer ? "Player 1's turn — tap the dice." : "Your turn — tap the dice."
     }
 
     func resetForNewGameCommand() { newGame() }
 
+    /// Display name for a side, depending on the mode.
+    func sideName(_ side: Turn) -> String {
+        switch side {
+        case .player: return twoPlayer ? "Player 1" : "You"
+        case .cpu: return twoPlayer ? "Player 2" : "CPU"
+        }
+    }
+
     // MARK: - Rolling
 
     func rollDice() {
-        guard turn == .player, !rolling, winner == nil else { return }
-        startRoll(for: .player)
+        guard !rolling, winner == nil else { return }
+        // In vs-CPU mode the CPU rolls for itself; in 2P either human rolls.
+        if turn == .cpu && !twoPlayer { return }
+        startRoll(for: turn)
     }
 
     private func startRoll(for side: Turn) {
         rolling = true
-        message = side == .player ? "Rolling…" : "CPU is rolling…"
+        if side == .player {
+            message = twoPlayer ? "Player 1 is rolling…" : "Rolling…"
+        } else {
+            message = twoPlayer ? "Player 2 is rolling…" : "CPU is rolling…"
+        }
+        SoundFX.shared.play(.dice)
         let gen = generation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
             guard let self, gen == self.generation else { return }
@@ -89,12 +107,17 @@ final class SnakesLaddersModel: ObservableObject {
         let pos = side == .player ? playerPos : cpuPos
         if pos == 100 {
             winner = side
-            message = side == .player ? "YOU WIN! 🏆" : "CPU wins this one."
+            if twoPlayer {
+                message = side == .player ? "PLAYER 1 WINS! 🏆" : "PLAYER 2 WINS! 🏆"
+            } else {
+                message = side == .player ? "YOU WIN! 🏆" : "CPU wins this one."
+            }
             recordWin(side)
+            SoundFX.shared.play(twoPlayer || side == .player ? .win : .lose)
             return
         }
         if let top = Self.ladders[pos] {
-            message = (side == .player ? "You climbed" : "CPU climbed") + " a ladder! 🪜 \(pos) → \(top)"
+            message = "\(sideName(side)) climbed a ladder! 🪜 \(pos) → \(top)"
             let gen = generation
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                 guard let self, gen == self.generation else { return }
@@ -104,7 +127,10 @@ final class SnakesLaddersModel: ObservableObject {
             return
         }
         if let tail = Self.snakes[pos] {
-            message = (side == .player ? "A snake got you" : "A snake got the CPU") + "! 🐍 \(pos) → \(tail)"
+            let snakeBit = (side == .player && !twoPlayer)
+                ? "A snake got you!"
+                : "A snake got \(sideName(side))!"
+            message = "\(snakeBit) 🐍 \(pos) → \(tail)"
             let gen = generation
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                 guard let self, gen == self.generation else { return }
@@ -120,14 +146,18 @@ final class SnakesLaddersModel: ObservableObject {
         guard winner == nil else { return }
         if side == .player {
             turn = .cpu
-            let gen = generation
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                guard let self, gen == self.generation, self.winner == nil else { return }
-                self.startRoll(for: .cpu)
+            if twoPlayer {
+                message = "Player 2's turn — tap the dice."
+            } else {
+                let gen = generation
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    guard let self, gen == self.generation, self.winner == nil else { return }
+                    self.startRoll(for: .cpu)
+                }
             }
         } else {
             turn = .player
-            message = "Your turn — tap the dice."
+            message = twoPlayer ? "Player 1's turn — tap the dice." : "Your turn — tap the dice."
         }
     }
 

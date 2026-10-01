@@ -21,7 +21,7 @@ struct SnakesLaddersView: View {
                     DiceView(
                         value: model.diceValue,
                         rolling: model.rolling,
-                        enabled: model.turn == .player && model.winner == nil,
+                        enabled: (model.turn == .player || model.twoPlayer) && model.winner == nil,
                         onTap: { model.rollDice() }
                     )
 
@@ -31,8 +31,10 @@ struct SnakesLaddersView: View {
                             .foregroundColor(Theme.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 8) {
-                            turnDot(isActive: model.turn == .player, color: .blue, label: "You")
-                            turnDot(isActive: model.turn == .cpu, color: .red, label: "CPU")
+                            turnDot(isActive: model.turn == .player, color: .blue,
+                                    label: model.twoPlayer ? "P1" : "You")
+                            turnDot(isActive: model.turn == .cpu, color: .red,
+                                    label: model.twoPlayer ? "P2" : "CPU")
                         }
                     }
                     Spacer()
@@ -68,8 +70,15 @@ struct SnakesLaddersView: View {
                     .foregroundColor(Theme.textSecondary)
             }
             Spacer()
-            StatPill(icon: "person.fill", text: "You \(model.playerWins)")
-            StatPill(icon: "cpu", text: "CPU \(model.cpuWins)")
+            Picker("Mode", selection: $model.twoPlayer) {
+                Text("vs CPU").tag(false)
+                Text("2P").tag(true)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 130)
+            .onChange(of: model.twoPlayer) { _, _ in model.newGame() }
+            StatPill(icon: "person.fill", text: "\(model.twoPlayer ? "P1" : "You") \(model.playerWins)")
+            StatPill(icon: "cpu", text: "\(model.twoPlayer ? "P2" : "CPU") \(model.cpuWins)")
             Button(action: { model.newGame() }) {
                 Image(systemName: "arrow.counterclockwise")
                     .font(.title3)
@@ -222,7 +231,9 @@ struct SnakesLaddersView: View {
 
     private var winCard: some View {
         VStack(spacing: 12) {
-            Text(model.winner == .player ? "YOU WIN! 🏆" : "CPU WINS")
+            Text(model.winner == .player
+                 ? (model.twoPlayer ? "PLAYER 1 WINS! 🏆" : "YOU WIN! 🏆")
+                 : (model.twoPlayer ? "PLAYER 2 WINS! 🏆" : "CPU WINS"))
                 .font(.title2.bold())
                 .foregroundColor(model.winner == .player ? Theme.good : Theme.danger)
             Button(action: { model.newGame() }) {
