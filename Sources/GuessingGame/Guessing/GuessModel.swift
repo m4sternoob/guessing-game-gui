@@ -3,11 +3,37 @@ import Combine
 
 // Game logic for the number guessing game. UI-agnostic state machine:
 // setup -> playing -> won.
+// v3.1: hot/cold proximity feedback, narrowed-range display, lifetime stats.
 
 final class GuessModel: ObservableObject {
 
-    enum Phase { case setup, playing, won }
+    enum Phase { case setup, playing, won, lost }
     enum Tone { case neutral, low, high, error, win }
+
+    /// How close the last guess was, as a fraction of the range.
+    enum Proximity: CaseIterable {
+        case freezing, cold, warm, hot, burning
+
+        var label: String {
+            switch self {
+            case .freezing: return "Freezing — way off"
+            case .cold: return "Cold"
+            case .warm: return "Warm — getting there"
+            case .hot: return "Hot!"
+            case .burning: return "Burning hot!"
+            }
+        }
+
+        var emoji: String {
+            switch self {
+            case .freezing: return "🧊"
+            case .cold: return "❄️"
+            case .warm: return "🌤️"
+            case .hot: return "🔥"
+            case .burning: return "🚀"
+            }
+        }
+    }
 
     struct Attempt: Identifiable {
         let id = UUID()
@@ -35,6 +61,16 @@ final class GuessModel: ObservableObject {
             case .custom: return nil
             }
         }
+
+        /// Max attempts before the round is lost, or nil for unlimited.
+        var attemptLimit: Int? {
+            switch self {
+            case .easy: return 8
+            case .medium: return 10
+            case .hard: return 15
+            case .custom: return nil
+            }
+        }
     }
 
     @Published var phase: Phase = .setup
@@ -45,9 +81,31 @@ final class GuessModel: ObservableObject {
     @Published var attempts: [Attempt] = []
     @Published var message = "Pick a difficulty and press Start."
     @Published var tone: Tone = .neutral
+    @Published var proximity: Proximity? = nil
+    @Published var possibleLo = 1
+    @Published var possibleHi = 100
     @Published var errorMessage: String? = nil
     @Published var best: Int? = nil
     @Published var isNewBest = false
+
+    // Lifetime stats (all difficulties combined)
+    @Published var gamesPlayed = 0
+    @Published var gamesWon = 0
+    @Published var totalAttempts = 0
+
+    var avgAttempts: Double {
+        gamesWon > 0 ? Double(totalAttempts) / Double(gamesWon) : 0
+    }
+
+    var winRate: Double {
+        gamesPlayed > 0 ? Double(gamesWon) / Double(gamesPlayed) : 0
+    }
+
+    /// Nil when the difficulty has no attempt cap.
+    var attemptsLeft: Int? {
+        guard let limit = difficulty.attemptLimit else { return nil }
+        return max(0, limit - attempts.count)
+    }
 
     private var secret = 0
     private var lower = 1
@@ -57,6 +115,7 @@ final class GuessModel: ObservableObject {
 
     init() {
         loadBest()
+        loadStats()
     }
 
     // MARK: - Setup
@@ -76,12 +135,15 @@ final class GuessModel: ObservableObject {
         let hi = max(lo + 1, Int(maxText) ?? 100)
         lower = lo
         upper = hi
+        possibleLo = lo
+        possibleHi = hi
         minText = "\(lo)"
         maxText = "\(hi)"
         secret = Int.random(in: lo...hi)
         attempts = []
         guessText = ""
         errorMessage = nil
+        proximity = nil
         isNewBest = false
         phase = .playing
         message = "I'm thinking of a number between \(lo) and \(hi)."
@@ -107,21 +169,49 @@ final class GuessModel: ObservableObject {
             phase = .won
             message = "Correct! The number was \(secret)."
             tone = .win
+            proximity = nil
+            recordWin(attempts: n)
             if best == nil || n < best! {
                 best = n
                 isNewBest = true
                 saveBest()
             }
-        } else if val < secret {
-            attempts.append(Attempt(value: val, hint: .low, number: n))
-            message = "\(val) is too low — try higher."
-            tone = .low
         } else {
-            attempts.append(Attempt(value: val, hint: .high, number: n))
-            message = "\(val) is too high — try lower."
-            tone = .high
+            let tooLow = val < secret
+            attempts.append(Attempt(value: val, hint: tooLow ? .low : .high, number: n))
+            if tooLow {
+                possibleLo = max(possibleLo, val + 1)
+                proximity = proximityFor(distance: secret - val)
+                message = "\(val) is too low — try higher."
+                tone = .low
+            } else {
+                possibleHi = min(possibleHi, val - 1)
+                proximity = proximityFor(distance: val - secret)
+                message = "\(val) is too high — try lower."
+                tone = .high
+            }
+            // Out of attempts?
+            if let left = attemptsLeft, left == 0 {
+                phase = .lost
+                message = "Out of attempts! The number was \(secret)."
+                tone = .error
+                proximity = nil
+                recordLoss()
+            }
         }
         guessText = ""
+    }
+
+    private func proximityFor(distance: Int) -> Proximity {
+        let span = max(1, upper - lower)
+        let ratio = Double(distance) / Double(span)
+        switch ratio {
+        case ..<0.04: return .burning
+        case ..<0.12: return .hot
+        case ..<0.28: return .warm
+        case ..<0.55: return .cold
+        default: return .freezing
+        }
     }
 
     func quickPick(_ value: Int) {
@@ -147,13 +237,14 @@ final class GuessModel: ObservableObject {
         attempts = []
         guessText = ""
         errorMessage = nil
+        proximity = nil
         isNewBest = false
         message = "Pick a difficulty and press Start."
         tone = .neutral
     }
 
     func resetForNewGameCommand() {
-        if phase == .playing || phase == .won {
+        if phase == .playing || phase == .won || phase == .lost {
             startGame()
         }
     }
@@ -171,6 +262,28 @@ final class GuessModel: ObservableObject {
         if let b = best {
             UserDefaults.standard.set(b, forKey: bestKey)
         }
+    }
+
+    // MARK: - Lifetime stats
+
+    private func loadStats() {
+        gamesPlayed = UserDefaults.standard.integer(forKey: "gg3-guess-played")
+        gamesWon = UserDefaults.standard.integer(forKey: "gg3-guess-won")
+        totalAttempts = UserDefaults.standard.integer(forKey: "gg3-guess-attempts")
+    }
+
+    private func recordWin(attempts n: Int) {
+        gamesPlayed += 1
+        gamesWon += 1
+        totalAttempts += n
+        UserDefaults.standard.set(gamesPlayed, forKey: "gg3-guess-played")
+        UserDefaults.standard.set(gamesWon, forKey: "gg3-guess-won")
+        UserDefaults.standard.set(totalAttempts, forKey: "gg3-guess-attempts")
+    }
+
+    private func recordLoss() {
+        gamesPlayed += 1
+        UserDefaults.standard.set(gamesPlayed, forKey: "gg3-guess-played")
     }
 
     // MARK: - Errors (auto-dismissing)
