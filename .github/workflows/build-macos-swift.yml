@@ -49,12 +49,12 @@ jobs:
       - name: Ad-hoc sign (after ALL binary changes)
         run: |
           set -euo pipefail
-          # Warmup: the first codesign invocation on a fresh macos-15 runner can
-          # flake with "No such process"; this one is allowed to fail.
-          codesign -dv .build/release/GuessingGame > /dev/null 2>&1 || true
-          # --force: swift's linker already ad-hoc signs the binary, so the nested
-          # signature must be replaced. No --deep: the bundle has no nested code
-          # (single Mach-O + resources); --deep is deprecated and flaky here.
+          # Proven recipe (diagnostic run #9): the nested binary arrives with the
+          # linker's ad-hoc signature, which bundle-signing alone cannot replace
+          # ("No such process" after "replacing existing signature"). Replace the
+          # linker signature on the bare binary FIRST, then seal the bundle.
+          # No --deep: the bundle has no nested code (single Mach-O + resources).
+          codesign --force --sign - "5IN1.app/Contents/MacOS/GuessingGame"
           codesign --force --sign - "5IN1.app"
           codesign -v "5IN1.app"
           spctl --assess --type execute "5IN1.app" || true
@@ -74,13 +74,13 @@ jobs:
       - name: Package zip
         run: |
           set -euo pipefail
-          ditto -c -k --keepParent "5IN1.app" "5IN1-macOS-v3.1.1.zip"
-          shasum -a 256 "5IN1-macOS-v3.1.1.zip" | tee sha256.txt
+          ditto -c -k --keepParent "5IN1.app" "5IN1-macOS-v3.2.0.zip"
+          shasum -a 256 "5IN1-macOS-v3.2.0.zip" | tee sha256.txt
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 5IN1-macOS-v3.1.1
+          name: 5IN1-macOS-v3.2.0
           path: |
-            5IN1-macOS-v3.1.1.zip
+            5IN1-macOS-v3.2.0.zip
             sha256.txt
