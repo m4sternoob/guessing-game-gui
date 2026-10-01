@@ -182,7 +182,7 @@ struct SnakesLaddersView: View {
                     p.move(to: cellCenter(a, size: size))
                     p.addLine(to: cellCenter(b, size: size))
                 }
-                .stroke(Color(red: 1.0, green: 0.35, blue: 0.35), lineWidth: 5, style: StrokeStyle(dash: [7, 4]))
+                .stroke(Color(red: 1.0, green: 0.35, blue: 0.35), style: StrokeStyle(lineWidth: 5, dash: [7, 4]))
                 .opacity(0.85)
             }
         }
