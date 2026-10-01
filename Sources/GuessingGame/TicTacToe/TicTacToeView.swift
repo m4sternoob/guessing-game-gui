@@ -9,51 +9,58 @@ struct TicTacToeView: View {
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
+        ZStack {
+            VStack(spacing: 0) {
+                header
 
-            Divider()
-                .background(Theme.divider)
+                Divider()
+                    .background(Theme.divider)
 
-            ScrollView {
-                VStack(spacing: 20) {
-                    difficultyPicker
+                ScrollView {
+                    VStack(spacing: 20) {
+                        difficultyPicker
 
-                    LazyVGrid(columns: columns, spacing: 12) {
-                        ForEach(0..<9) { i in
-                            cell(i)
+                        LazyVGrid(columns: columns, spacing: 12) {
+                            ForEach(0..<9) { i in
+                                cell(i)
+                            }
                         }
-                    }
-                    .frame(maxWidth: 400)
+                        .frame(maxWidth: 400)
 
-                    Text(model.message)
-                        .font(.headline)
-                        .foregroundColor(Theme.textPrimary)
+                        Text(model.message)
+                            .font(model.gameOver ? .title2.bold() : .headline)
+                            .foregroundColor(model.winner == .x ? Theme.good
+                                : model.winner == .o ? Theme.danger : Theme.textPrimary)
+                            .animation(.spring(response: 0.35, dampingFraction: 0.6), value: model.gameOver)
 
-                    HStack(spacing: 10) {
-                        StatPill(icon: "person.fill", text: "You \(model.playerScore)")
-                        StatPill(icon: "cpu", text: "CPU \(model.cpuScore)")
-                        StatPill(icon: "equal", text: "Draws \(model.draws)")
-                    }
+                        HStack(spacing: 10) {
+                            StatPill(icon: "person.fill", text: "You \(model.playerScore)")
+                            StatPill(icon: "cpu", text: "CPU \(model.cpuScore)")
+                            StatPill(icon: "equal", text: "Draws \(model.draws)")
+                        }
 
-                    Button(action: { model.newGame() }) {
-                        Text("New Game")
-                            .font(.title3.bold())
-                            .foregroundColor(.white)
-                            .frame(maxWidth: 280)
-                            .padding(.vertical, 12)
-                            .background(Theme.accent)
-                            .cornerRadius(12)
+                        Button(action: { model.newGame() }) {
+                            Text("New Game")
+                                .font(.title3.bold())
+                                .foregroundColor(.white)
+                                .frame(maxWidth: 280)
+                                .padding(.vertical, 12)
+                                .background(Theme.accent)
+                                .cornerRadius(12)
+                        }
+                        .buttonStyle(ScaleButtonStyle())
                     }
-                    .buttonStyle(ScaleButtonStyle())
-                }
-                .padding(24)
+                    .padding(24)
             }
+        if model.winner == .x {
+            ConfettiView()
+        }
         }
         .onChange(of: coordinator.newGameID) { _, _ in
             model.resetForNewGameCommand()
         }
     }
+}
 
     // MARK: - Header
 
