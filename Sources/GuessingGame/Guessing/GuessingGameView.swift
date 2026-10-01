@@ -102,8 +102,22 @@ struct GuessingGameView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .disabled(model.dailyMode)
+            .opacity(model.dailyMode ? 0.5 : 1.0)
             .onChange(of: model.difficulty) { _, new in
                 model.selectDifficulty(new)
+            }
+
+            Toggle("Daily challenge", isOn: $model.dailyMode)
+                .font(.subheadline)
+                .foregroundColor(Theme.textSecondary)
+                .toggleStyle(.switch)
+
+            if model.dailyMode {
+                Text("📅 \(model.dailyDateLabel) — same number for everyone today • 1–100 • 10 attempts")
+                    .font(.subheadline)
+                    .foregroundColor(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
             }
 
             HStack(spacing: 12) {
@@ -145,8 +159,13 @@ struct GuessingGameView: View {
 
             if model.difficulty != .custom,
                let r = model.difficulty.range,
-               let limit = model.difficulty.attemptLimit {
+               let limit = model.difficulty.attemptLimit,
+               !model.dailyMode {
                 Text("Range \(r.0)–\(r.1) • \(limit) attempts")
+                    .font(.subheadline)
+                    .foregroundColor(Theme.textSecondary)
+            } else if model.dailyMode {
+                Text("Daily: 1–100 • 10 attempts")
                     .font(.subheadline)
                     .foregroundColor(Theme.textSecondary)
             } else if model.difficulty == .custom {
@@ -170,6 +189,8 @@ struct GuessingGameView: View {
                 HStack(spacing: 10) {
                     StatPill(icon: "gamecontroller.fill",
                              text: "\(model.gamesPlayed) played")
+                    StatPill(icon: "flame.fill",
+                             text: "\(model.streak) streak")
                     StatPill(icon: "chart.bar.fill",
                              text: String(format: "%.1f avg", model.avgAttempts))
                     StatPill(icon: "percent",
@@ -325,6 +346,12 @@ struct GuessingGameView: View {
                 Label("New best score!", systemImage: "trophy.fill")
                     .font(.headline)
                     .foregroundColor(Theme.warnLow)
+            }
+
+            if model.streak > 1 {
+                Label("\(model.streak)-game win streak!", systemImage: "flame.fill")
+                    .font(.headline)
+                    .foregroundColor(Color(red: 1.0, green: 0.55, blue: 0.25))
             }
 
             Divider().background(Theme.divider)

@@ -4,6 +4,30 @@ import Combine
 // Game logic for the number guessing game. UI-agnostic state machine:
 // setup -> playing -> won.
 // v3.1: hot/cold proximity feedback, narrowed-range display, lifetime stats.
+// v3.2: win streaks, daily-challenge fixed-seed mode.
+
+/// Deterministic RNG (splitmix64) for the daily challenge: everyone who plays
+/// on the same calendar day gets the same secret number. No dependencies.
+struct SeededRNG {
+    private var state: UInt64
+
+    init(seed: UInt64) {
+        state = seed == 0 ? 0x9E3779B97F4A7C15 : seed
+    }
+
+    mutating func next() -> UInt64 {
+        state &+= 0x9E3779B97F4A7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
+        z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
+        return z ^ (z >> 31)
+    }
+
+    mutating func nextInt(in range: ClosedRange<Int>) -> Int {
+        let span = UInt64(range.upperBound - range.lowerBound + 1)
+        return range.lowerBound + Int(next() % span)
+    }
+}
 
 final class GuessModel: ObservableObject {
 
@@ -93,6 +117,14 @@ final class GuessModel: ObservableObject {
     @Published var gamesWon = 0
     @Published var totalAttempts = 0
 
+    /// Consecutive wins, any mode. Persisted; reset on a loss.
+    /// willSet publishes — @AppStorage alone doesn't emit objectWillChange.
+    @AppStorage("gg3-guess-streak") var streak = 0 {
+        willSet { objectWillChange.send() }
+    }
+    /// Daily challenge: fixed 1–100 range, 10 attempts, date-seeded secret.
+    @Published var dailyMode = false
+
     var avgAttempts: Double {
         gamesWon > 0 ? Double(totalAttempts) / Double(gamesWon) : 0
     }
@@ -103,9 +135,29 @@ final class GuessModel: ObservableObject {
 
     /// Nil when the difficulty has no attempt cap.
     var attemptsLeft: Int? {
-        guard let limit = difficulty.attemptLimit else { return nil }
+        guard let limit = currentAttemptLimit else { return nil }
         return max(0, limit - attempts.count)
     }
+
+    /// Daily challenge always plays 1–100 with 10 attempts.
+    var currentAttemptLimit: Int? {
+        dailyMode ? 10 : difficulty.attemptLimit
+    }
+
+    /// yyyymmdd — the daily challenge seed. Same number for everyone, all day.
+    private var dailySeed: UInt64 {
+        let c = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+        return UInt64((c.year ?? 0) * 10_000 + (c.month ?? 0) * 100 + (c.day ?? 0))
+    }
+
+    private static let dayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return f
+    }()
+
+    var dailyDateLabel: String { Self.dayFormatter.string(from: Date()) }
 
     private var secret = 0
     private var lower = 1
@@ -131,22 +183,33 @@ final class GuessModel: ObservableObject {
     }
 
     func startGame() {
-        let lo = max(1, Int(minText) ?? 1)
-        let hi = max(lo + 1, Int(maxText) ?? 100)
+        let lo: Int
+        let hi: Int
+        if dailyMode {
+            lo = 1
+            hi = 100
+        } else {
+            lo = max(1, Int(minText) ?? 1)
+            hi = max(lo + 1, Int(maxText) ?? 100)
+        }
         lower = lo
         upper = hi
         possibleLo = lo
         possibleHi = hi
         minText = "\(lo)"
         maxText = "\(hi)"
-        secret = Int.random(in: lo...hi)
+        secret = dailyMode
+            ? SeededRNG(seed: dailySeed).nextInt(in: lo...hi)
+            : Int.random(in: lo...hi)
         attempts = []
         guessText = ""
         errorMessage = nil
         proximity = nil
         isNewBest = false
         phase = .playing
-        message = "I'm thinking of a number between \(lo) and \(hi)."
+        message = dailyMode
+            ? "Daily challenge (\(dailyDateLabel)) — I'm thinking of a number between 1 and 100."
+            : "I'm thinking of a number between \(lo) and \(hi)."
         tone = .neutral
     }
 
@@ -170,6 +233,8 @@ final class GuessModel: ObservableObject {
             message = "Correct! The number was \(secret)."
             tone = .win
             proximity = nil
+            streak += 1
+            SoundFX.shared.play(.win)
             recordWin(attempts: n)
             if best == nil || n < best! {
                 best = n
@@ -196,6 +261,8 @@ final class GuessModel: ObservableObject {
                 message = "Out of attempts! The number was \(secret)."
                 tone = .error
                 proximity = nil
+                streak = 0
+                SoundFX.shared.play(.lose)
                 recordLoss()
             }
         }
