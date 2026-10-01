@@ -1,13 +1,29 @@
 import SwiftUI
 
-// Ludo board — you (red) vs the CPU (yellow). Glowing tokens are movable: tap one.
+// Ludo board — you (red) vs the CPU(s). Glowing tokens are movable: tap one.
+// 2-player or 4-player (you + 3 CPU), with a fast-CPU animation toggle.
 
 struct LudoView: View {
     @StateObject private var model = LudoModel()
     @EnvironmentObject private var coordinator: GameCoordinator
 
-    private let youColor = Color(red: 0.95, green: 0.28, blue: 0.28)
-    private let cpuColor = Color(red: 1.0, green: 0.80, blue: 0.20)
+    private func color(for side: LudoModel.Side) -> Color {
+        switch side {
+        case .you: return Color(red: 0.95, green: 0.28, blue: 0.28)
+        case .cpu1: return Color(red: 1.0, green: 0.80, blue: 0.20)
+        case .cpu2: return Color(red: 0.25, green: 0.80, blue: 0.35)
+        case .cpu3: return Color(red: 0.35, green: 0.60, blue: 1.0)
+        }
+    }
+
+    private func baseOrigin(for side: LudoModel.Side) -> (r: Int, c: Int) {
+        switch side {
+        case .you: return (0, 0)
+        case .cpu1: return (0, 9)
+        case .cpu2: return (9, 0)
+        case .cpu3: return (9, 9)
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -19,6 +35,8 @@ struct LudoView: View {
 
                 board
                     .padding(14)
+
+                controlsRow
 
                 HStack(spacing: 20) {
                     DiceView(
@@ -34,8 +52,11 @@ struct LudoView: View {
                             .foregroundColor(Theme.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 8) {
-                            turnDot(isActive: model.turn == .you, color: youColor, label: "You")
-                            turnDot(isActive: model.turn == .cpu, color: cpuColor, label: "CPU")
+                            ForEach(model.activeSides, id: \.self) { side in
+                                turnDot(isActive: model.turn == side,
+                                        color: color(for: side),
+                                        label: side.displayName)
+                            }
                         }
                     }
                     Spacer()
@@ -87,6 +108,25 @@ struct LudoView: View {
         .padding(.vertical, 14)
     }
 
+    private var controlsRow: some View {
+        HStack {
+            Picker("Players", selection: $model.fourPlayer) {
+                Text("2 players").tag(false)
+                Text("4 players").tag(true)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 190)
+            .onChange(of: model.fourPlayer) { _, _ in model.newGame() }
+            Toggle("Fast CPU", isOn: $model.fastCPU)
+                .font(.subheadline)
+                .foregroundColor(Theme.textSecondary)
+                .toggleStyle(.switch)
+            Spacer()
+        }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 6)
+    }
+
     private func turnDot(isActive: Bool, color: Color, label: String) -> some View {
         HStack(spacing: 6) {
             Circle()
@@ -133,37 +173,52 @@ struct LudoView: View {
         context.fill(Path(CGRect(x: 0, y: 0, width: size, height: size)),
                      with: .color(Color(red: 0.07, green: 0.08, blue: 0.11)))
 
-        // Bases
-        drawBase(context: &context, at: (0, 0), color: youColor, cell: cell)
-        drawBase(context: &context, at: (0, 9), color: cpuColor, cell: cell)
+        // Bases for the sides in play
+        for side in model.activeSides {
+            drawBase(context: &context, at: baseOrigin(for: side),
+                     color: color(for: side), cell: cell)
+        }
 
-        // Main track
+        // Main track — start squares take their side's color
+        let startColor = Dictionary(
+            uniqueKeysWithValues: model.activeSides.map { (LudoModel.startIndex[$0]!, $0) })
         for (i, p) in LudoModel.mainPath.enumerated() {
             var fill = Color(red: 0.14, green: 0.16, blue: 0.21)
-            if i == 0 { fill = youColor }
-            else if i == 26 { fill = cpuColor }
-            else if LudoModel.safe.contains(i) { fill = Color(red: 0.20, green: 0.23, blue: 0.30) }
-        context.fill(Path(rect(p.r, p.c).insetBy(dx: 0.5, dy: 0.5)), with: .color(fill))
-            if LudoModel.safe.contains(i) && i != 0 && i != 26 {
+            if let side = startColor[i] {
+                fill = color(for: side)
+            } else if LudoModel.safe.contains(i) {
+                fill = Color(red: 0.20, green: 0.23, blue: 0.30)
+            }
+            context.fill(Path(rect(p.r, p.c).insetBy(dx: 0.5, dy: 0.5)), with: .color(fill))
+            if LudoModel.safe.contains(i), startColor[i] == nil {
                 let t = Text("★").font(.system(size: cell * 0.42)).foregroundColor(.white.opacity(0.75))
                 context.draw(t, at: CGPoint(x: (CGFloat(p.c) + 0.5) * cell, y: (CGFloat(p.r) + 0.5) * cell),
                              anchor: .center)
             }
         }
 
-        // Home stretches
-        for (side, cells) in LudoModel.homeStretch {
-            let col = side == .you ? youColor : cpuColor
-            for p in cells {
+        // Home stretches for the sides in play
+        for side in model.activeSides {
+            let col = color(for: side)
+            for p in LudoModel.homeStretch[side]! {
                 context.fill(Path(rect(p.r, p.c).insetBy(dx: 0.5, dy: 0.5)), with: .color(col.opacity(0.85)))
             }
         }
 
-        // Center home: four colored quadrants
-        let quadrants: [(ClosedRange<Int>, ClosedRange<Int>, Color)] = [
-            (6...7, 6...7, youColor), (6...7, 7...8, cpuColor),
-            (7...8, 6...7, youColor.opacity(0.7)), (7...8, 7...8, cpuColor.opacity(0.7)),
-        ]
+        // Center home
+        let sides = model.activeSides
+        let quadrants: [(ClosedRange<Int>, ClosedRange<Int>, Color)]
+        if sides.count == 2 {
+            quadrants = [
+                (6...7, 6...7, color(for: .you)), (6...7, 7...8, color(for: .cpu1)),
+                (7...8, 6...7, color(for: .you).opacity(0.7)), (7...8, 7...8, color(for: .cpu1).opacity(0.7)),
+            ]
+        } else {
+            quadrants = [
+                (6...7, 6...7, color(for: .you)), (6...7, 7...8, color(for: .cpu1)),
+                (7...8, 6...7, color(for: .cpu2)), (7...8, 7...8, color(for: .cpu3)),
+            ]
+        }
         for (rs, cs, col) in quadrants {
             let q = CGRect(x: CGFloat(cs.lowerBound) * cell, y: CGFloat(rs.lowerBound) * cell,
                            width: CGFloat(cs.upperBound - cs.lowerBound + 1) * cell,
@@ -203,15 +258,15 @@ struct LudoView: View {
         var byCell: [String: [Int]] = [:] // key -> token global ids
         func key(_ r: Int, _ c: Int) -> String { "\(r)-\(c)" }
 
-        let all: [(LudoModel.Side, [Int])] = [(.you, model.youTokens), (.cpu, model.cpuTokens)]
-        for (side, tokens) in all {
-            for (i, steps) in tokens.enumerated() {
-                let gid = (side == .you ? 0 : 4) + i
+        let sides = model.activeSides
+        for (si, side) in sides.enumerated() {
+            for (i, steps) in model.tokens[side]!.enumerated() {
+                let gid = si * 4 + i
                 if steps == -1 {
-                    let (br, bc) = side == .you ? (0, 0) : (0, 9)
+                    let o = baseOrigin(for: side)
                     let offs: (CGFloat, CGFloat) = [(1.5, 1.5), (1.5, 3.5), (3.5, 1.5), (3.5, 3.5)][i]
-                    let pt = CGPoint(x: (CGFloat(bc) + offs.0) * cell + cell / 2,
-                                     y: (CGFloat(br) + offs.1) * cell + cell / 2)
+                    let pt = CGPoint(x: (CGFloat(o.c) + offs.0) * cell + cell / 2,
+                                     y: (CGFloat(o.r) + offs.1) * cell + cell / 2)
                     let isMov = side == .you && model.movable.contains(i)
                     spots.append(TokenSpot(id: "b\(gid)", side: side, index: i, point: pt, isMovable: isMov))
                 } else if steps <= 55, let pos = model.boardCell(side: side, steps: steps) {
@@ -220,8 +275,10 @@ struct LudoView: View {
                     let cx: CGFloat = 7.5 * cell
                     let cy: CGFloat = 7.5 * cell
                     let offs: (CGFloat, CGFloat) = [(-0.45, -0.45), (0.45, -0.45), (-0.45, 0.45), (0.45, 0.45)][i]
-                    let dx: CGFloat = side == .you ? -0.9 : 0.9
-                    let pt = CGPoint(x: cx + (offs.0 + dx) * cell * 0.55, y: cy + offs.1 * cell * 0.55)
+                    let dx: CGFloat = side == .you ? -0.9 : (side == .cpu1 ? 0.9 : 0)
+                    let dy: CGFloat = side == .cpu2 ? -0.9 : (side == .cpu3 ? 0.9 : 0)
+                    let pt = CGPoint(x: cx + (offs.0 + dx) * cell * 0.55,
+                                     y: cy + (offs.1 + dy) * cell * 0.55)
                     spots.append(TokenSpot(id: "f\(gid)", side: side, index: i, point: pt, isMovable: false))
                 }
             }
@@ -236,7 +293,7 @@ struct LudoView: View {
             let r = Int(parts[0])!, c = Int(parts[1])!
             let center = CGPoint(x: (CGFloat(c) + 0.5) * cell, y: (CGFloat(r) + 0.5) * cell)
             for (n, gid) in gids.enumerated() {
-                let side: LudoModel.Side = gid < 4 ? .you : .cpu
+                let side = sides[gid / 4]
                 let idx = gid % 4
                 let o = stackOffs[n % stackOffs.count]
                 let pt = CGPoint(x: center.x + o.0 * cell, y: center.y + o.1 * cell)
@@ -251,7 +308,7 @@ struct LudoView: View {
         ZStack {
             ForEach(tokenSpots(cell: cell)) { spot in
                 LudoToken(
-                    color: spot.side == .you ? youColor : cpuColor,
+                    color: color(for: spot.side),
                     radius: cell * 0.30,
                     isMovable: spot.isMovable,
                     onTap: { model.tapToken(spot.index) }
@@ -260,7 +317,7 @@ struct LudoView: View {
             }
         }
         .animation(.spring(response: 0.45, dampingFraction: 0.7),
-                   value: model.youTokens + model.cpuTokens)
+                   value: model.tokens)
         .allowsHitTesting(true)
     }
 
@@ -268,7 +325,9 @@ struct LudoView: View {
 
     private var winCard: some View {
         VStack(spacing: 12) {
-            Text(model.winner == .you ? "YOU WIN! 🏆" : "CPU WINS")
+            Text(model.winner?.isHuman == true
+                 ? "YOU WIN! 🏆"
+                 : "\((model.winner?.displayName ?? "CPU").uppercased()) WINS")
                 .font(.title2.bold())
                 .foregroundColor(model.winner == .you ? Theme.good : Theme.danger)
             Button(action: { model.newGame() }) {
