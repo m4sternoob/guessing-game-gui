@@ -1,18 +1,24 @@
 import SwiftUI
 
-// Root container: toolbar switcher between the two games.
+// Root container: segmented switcher across the five games.
 // (macOS idiom — a segmented toolbar control, not the iOS flip-card.)
 
 enum ActiveGame: String, CaseIterable, Identifiable {
     case guessing
     case snake
+    case ladders
+    case ludo
+    case tictactoe
 
     var id: Self { self }
 
     var title: String {
         switch self {
-        case .guessing: return "Guessing Game"
+        case .guessing: return "Guess"
         case .snake: return "Snake"
+        case .ladders: return "Ladders"
+        case .ludo: return "Ludo"
+        case .tictactoe: return "TicTac"
         }
     }
 
@@ -20,6 +26,9 @@ enum ActiveGame: String, CaseIterable, Identifiable {
         switch self {
         case .guessing: return "questionmark.circle"
         case .snake: return "gamecontroller"
+        case .ladders: return "dice.fill"
+        case .ludo: return "circle.grid.3x3.fill"
+        case .tictactoe: return "grid"
         }
     }
 }
@@ -38,6 +47,12 @@ struct ContentView: View {
                     GuessingGameView()
                 case .snake:
                     SnakeGameView()
+                case .ladders:
+                    SnakesLaddersView()
+                case .ludo:
+                    LudoView()
+                case .tictactoe:
+                    TicTacToeView()
                 }
             }
         }
@@ -50,7 +65,7 @@ struct ContentView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 300)
+                .frame(width: 460)
             }
         }
     }
