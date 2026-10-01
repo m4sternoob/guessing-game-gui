@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 
 // Number guessing game — macOS layout.
 // Range setup -> guessing (quick picks, hot/cold meter, history) -> win celebration.
@@ -120,8 +119,9 @@ struct GuessingGameView: View {
                         .cornerRadius(10)
                         .disabled(model.difficulty != .custom)
                         .opacity(model.difficulty != .custom ? 0.5 : 1.0)
-                        .onReceive(Just(model.minText)) { v in
-                            model.minText = v.filter(\.isNumber)
+                        .onChange(of: model.minText) { _, new in
+                            let filtered = new.filter(\.isNumber)
+                            if filtered != new { model.minText = filtered }
                         }
                 }
                 VStack(alignment: .leading, spacing: 6) {
@@ -136,8 +136,9 @@ struct GuessingGameView: View {
                         .cornerRadius(10)
                         .disabled(model.difficulty != .custom)
                         .opacity(model.difficulty != .custom ? 0.5 : 1.0)
-                        .onReceive(Just(model.maxText)) { v in
-                            model.maxText = v.filter(\.isNumber)
+                        .onChange(of: model.maxText) { _, new in
+                            let filtered = new.filter(\.isNumber)
+                            if filtered != new { model.maxText = filtered }
                         }
                 }
             }
@@ -240,8 +241,9 @@ struct GuessingGameView: View {
                         .background(Theme.surface)
                         .cornerRadius(12)
                         .focused($guessFieldFocused)
-                        .onReceive(Just(model.guessText)) { v in
-                            model.guessText = v.filter(\.isNumber)
+                        .onChange(of: model.guessText) { _, new in
+                            let filtered = new.filter(\.isNumber)
+                            if filtered != new { model.guessText = filtered }
                         }
                         .onSubmit { model.submitGuess() }
 
