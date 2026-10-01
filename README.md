@@ -1,4 +1,4 @@
-# GameHub
+# 5IN1
 
 <div align="center">
 
@@ -18,7 +18,7 @@
 
 ## What's new in v3.1.0
 
-GameHub grows from two games to **five**: Snakes & Ladders, Ludo (you vs the CPU),
+5IN1 grows from two games to **five**: Snakes & Ladders, Ludo (you vs the CPU),
 and Tic-Tac-Toe join the Guessing Game and Snake. One window, one toolbar switcher,
 shared dark theme, per-game stats saved on your Mac.
 
@@ -63,7 +63,7 @@ in whichever game is active.
 ## ⬇️ Download
 
 Grab the latest `.zip` from the [**Releases**](https://github.com/m4sternoob/guessing-game-gui/releases) page,
-unzip, and open `GameHub.app`. Requires macOS 14 (Sonoma) or later, Apple Silicon or Intel.
+unzip, and open `5IN1.app`. Requires macOS 14 (Sonoma) or later, Apple Silicon or Intel.
 
 > The v3.1.0 release build is being finalized — it will appear on the Releases page once published.
 
@@ -114,7 +114,7 @@ source/ios/                    # iOS/SwiftUI version (separate target)
 
 ## 📜 Version history
 
-- **v3.1.0** — five-game GameHub: + Snakes & Ladders, Ludo, Tic-Tac-Toe; guessing hot/cold meter; snake wrap mode + juice
+- **v3.1.0** — five-game 5IN1: + Snakes & Ladders, Ludo, Tic-Tac-Toe; guessing hot/cold meter; snake wrap mode + juice
 - **v3.0.0** — from-scratch native macOS rewrite (Swift/SwiftUI/SpriteKit)
 - **v2.5.x** — C++/SDL2 builds (broken, superseded)
 - **v1.0.0 / v2.0.0** — early C++/SDL2 builds (ran on dev machine only)
