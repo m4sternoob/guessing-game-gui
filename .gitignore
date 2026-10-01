@@ -1,33 +1,23 @@
-# Build artifacts
-build/
-*.app/
-*.exe
-*.zip
-
-# IDE/editor
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# ImGui config
-imgui.ini
-
-# CMake
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-Makefile
-*.cmake
-
-# Compiled objects
+# Swift / SPM
+.build/
 *.o
-*.obj
 *.d
 
-# Logs
-*.log
+# Xcode
+DerivedData/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.playground/timeline.xctimeline
+
+# macOS
+.DS_Store
+*.icns
+
+# Packaging artifacts
+GameHub.app/
+GameHub-macOS-*.zip
+AppIcon.iconset/
+sha256.txt
+
+# Generated at build time (packaging/generate_icon.py)
+packaging/AppIcon-1024.png
