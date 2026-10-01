@@ -1,6 +1,6 @@
 import SwiftUI
 
-// v3.1.0 — GameHub: five mini-games, one native macOS app.
+// v3.1.0 — 5IN1: five mini-games, one native macOS app.
 
 /// Relays menu-bar commands (⌘N) down to the active game view.
 final class GameCoordinator: ObservableObject {
@@ -13,7 +13,7 @@ struct GuessingGameApp: App {
     @StateObject private var coordinator = GameCoordinator()
 
     var body: some Scene {
-        WindowGroup("GameHub") {
+        WindowGroup("5IN1") {
             ContentView()
                 .environmentObject(coordinator)
                 .frame(minWidth: 600, minHeight: 740)
