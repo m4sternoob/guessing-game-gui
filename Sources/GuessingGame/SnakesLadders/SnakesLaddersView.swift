@@ -167,7 +167,7 @@ struct SnakesLaddersView: View {
 
     private func links(size: CGFloat) -> some View {
         ZStack {
-            ForEach(Array(SnakesLaddersModel.ladders.keys.sorted()), id: \.self) { a in
+            ForEach(SnakesLaddersModel.ladders.keys.sorted(), id: \.self) { a in
                 let b = SnakesLaddersModel.ladders[a]!
                 Path { p in
                     p.move(to: cellCenter(a, size: size))
@@ -176,7 +176,7 @@ struct SnakesLaddersView: View {
                 .stroke(Color(red: 0.25, green: 0.85, blue: 0.35), lineWidth: 5)
                 .opacity(0.85)
             }
-            ForEach(Array(SnakesLaddersModel.snakes.keys.sorted()), id: \.self) { a in
+            ForEach(SnakesLaddersModel.snakes.keys.sorted(), id: \.self) { a in
                 let b = SnakesLaddersModel.snakes[a]!
                 Path { p in
                     p.move(to: cellCenter(a, size: size))
