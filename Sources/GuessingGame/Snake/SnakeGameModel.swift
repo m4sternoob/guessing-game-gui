@@ -13,6 +13,9 @@ final class SnakeGameModel: ObservableObject {
     @Published var highScore = 0
     @Published var isGameOver = false
     @Published var isPaused = false
+    /// Length and survival time of the last run — shown on the game-over card.
+    @Published var finalLength = 0
+    @Published var finalTime: TimeInterval = 0
     /// When true, the snake wraps around the edges instead of dying on walls.
     @Published var wrapMode = false
     /// Combo multiplier for chained quick pickups.
@@ -86,6 +89,7 @@ final class SnakeGameModel: ObservableObject {
     func togglePause() {
         if !isGameOver {
             isPaused.toggle()
+            SoundFX.shared.play(.tap)
         }
     }
 
@@ -105,6 +109,8 @@ final class SnakeGameModel: ObservableObject {
         justAte = nil
         isGameOver = false
         isPaused = false
+        finalLength = 0
+        finalTime = 0
         accumulator = 0
         stepTime = speed.stepInterval
         foodPulse = 0
@@ -154,6 +160,7 @@ final class SnakeGameModel: ObservableObject {
             let points = 10 * combo
             score += points
             justAte = EatEvent(x: newHead.x, y: newHead.y, points: points, combo: combo)
+            SoundFX.shared.play(.eat)
             if score % 50 == 0 && stepTime > 0.05 {
                 stepTime *= 0.9 // speed up as you eat
             }
@@ -181,6 +188,9 @@ final class SnakeGameModel: ObservableObject {
 
     private func gameOver() {
         isGameOver = true
+        finalLength = body.count
+        finalTime = elapsed
+        SoundFX.shared.play(.lose)
         if score > highScore {
             highScore = score
             saveHighScore()

@@ -32,11 +32,16 @@ struct SnakeGameView: View {
                 .onKeyPress("w") { model.setDirection(.up); return .handled }
                 .onKeyPress("s") { model.setDirection(.down); return .handled }
                 .onKeyPress(.space) { model.togglePause(); return .handled }
+                .onKeyPress("p") { model.togglePause(); return .handled }
 
             controlsHint
 
             directionPad
                 .padding(.bottom, 8)
+
+            if model.isPaused && !model.isGameOver {
+                pauseMenu
+            }
 
             if model.isGameOver {
                 gameOverCard
@@ -102,7 +107,7 @@ struct SnakeGameView: View {
 
     private var controlsHint: some View {
         HStack {
-            Text("Arrow keys or WASD • Space pauses")
+            Text("Arrow keys or WASD • Space/P pauses")
                 .font(.subheadline)
                 .foregroundColor(Theme.textMuted)
             Spacer()
@@ -149,6 +154,53 @@ struct SnakeGameView: View {
         .buttonStyle(ScaleButtonStyle())
     }
 
+    // MARK: - Pause menu
+
+    private var pauseMenu: some View {
+        VStack(spacing: 14) {
+            Text("PAUSED")
+                .font(.title2.bold())
+                .foregroundColor(Theme.warnLow)
+            HStack(spacing: 12) {
+                Button(action: {
+                    model.togglePause()
+                    boardFocused = true
+                }) {
+                    Label("Resume", systemImage: "play.fill")
+                        .font(.headline.bold())
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Theme.accent)
+                        .cornerRadius(12)
+                }
+                .buttonStyle(ScaleButtonStyle())
+                Button(action: {
+                    model.restart()
+                    boardFocused = true
+                }) {
+                    Label("Restart", systemImage: "arrow.counterclockwise")
+                        .font(.headline.bold())
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Theme.surface2)
+                        .cornerRadius(12)
+                }
+                .buttonStyle(ScaleButtonStyle())
+            }
+            .padding(.horizontal, 40)
+            Text("Space / P to resume")
+                .font(.caption)
+                .foregroundColor(Theme.textMuted)
+        }
+        .padding(.vertical, 20)
+        .background(Theme.surface.opacity(0.85))
+        .cornerRadius(16)
+        .padding(.horizontal, 24)
+        .transition(.scale.combined(with: .opacity))
+    }
+
     // MARK: - Game over
 
     private var gameOverCard: some View {
@@ -159,6 +211,12 @@ struct SnakeGameView: View {
             Text("Final Score: \(model.score)")
                 .font(.title3)
                 .foregroundColor(Theme.textSecondary)
+            HStack(spacing: 24) {
+                runStat(icon: "ruler.fill", label: "Length", value: "\(model.finalLength)")
+                runStat(icon: "timer", label: "Survived", value: formattedTime(model.finalTime))
+                runStat(icon: "trophy.fill", label: "Best", value: "\(model.highScore)")
+            }
+            .padding(.vertical, 4)
             Button(action: {
                 model.restart()
                 boardFocused = true
@@ -179,5 +237,21 @@ struct SnakeGameView: View {
         .cornerRadius(16)
         .padding(.horizontal, 24)
         .transition(.scale.combined(with: .opacity))
+    }
+
+    private func runStat(icon: String, label: String, value: String) -> some View {
+        VStack(spacing: 4) {
+            Label(value, systemImage: icon)
+                .font(.headline.bold())
+                .foregroundColor(Theme.textPrimary)
+            Text(label)
+                .font(.caption)
+                .foregroundColor(Theme.textMuted)
+        }
+    }
+
+    private func formattedTime(_ t: TimeInterval) -> String {
+        let s = Int(t)
+        return String(format: "%d:%02d", s / 60, s % 60)
     }
 }
