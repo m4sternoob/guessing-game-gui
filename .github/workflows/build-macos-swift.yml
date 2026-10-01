@@ -46,41 +46,41 @@ jobs:
           sips -z 1024 1024 packaging/AppIcon-1024.png --out "$ICONSET/icon_512x512@2x.png" > /dev/null
           iconutil -c icns "$ICONSET" -o "5IN1.app/Contents/Resources/AppIcon.icns"
 
-      - name: Diagnose bundle before signing
+      - name: Ad-hoc sign (after ALL binary changes)
         run: |
           set -euo pipefail
-          sw_vers
-          codesign --version || true
-          echo "--- existing signature on built binary ---"
-          codesign -dv .build/release/GuessingGame 2>&1 || true
-          echo "--- existing signature on assembled bundle ---"
-          codesign -dv "5IN1.app" 2>&1 || true
-          echo "--- xattrs on bundle ---"
-          xattr -lr "5IN1.app" 2>/dev/null | head -20 || true
-          echo "--- bundle layout ---"
-          find "5IN1.app" -type f
+          # Warmup: the first codesign invocation on a fresh macos-15 runner can
+          # flake with "No such process"; this one is allowed to fail.
+          codesign -dv .build/release/GuessingGame > /dev/null 2>&1 || true
+          # --force: swift's linker already ad-hoc signs the binary, so the nested
+          # signature must be replaced. No --deep: the bundle has no nested code
+          # (single Mach-O + resources); --deep is deprecated and flaky here.
+          codesign --force --sign - "5IN1.app"
+          codesign -v "5IN1.app"
+          spctl --assess --type execute "5IN1.app" || true
 
-      - name: EXPERIMENT - isolate codesign bundle failure (non-fatal, diagnostic run)
+      - name: Verify bundle
         run: |
           set -euo pipefail
-          echo "=== A: sign inner binary directly ==="
-          codesign --force --sign - "5IN1.app/Contents/MacOS/GuessingGame" && echo "A_OK_BINARY_SIGNED" || echo "A_FAIL"
-          echo "=== B: minimal bundle without Resources ==="
-          rm -rf Mini.app && mkdir -p Mini.app/Contents/MacOS
-          cp .build/release/GuessingGame Mini.app/Contents/MacOS/Mini
-          cp packaging/Info.plist Mini.app/Contents/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleExecutable Mini" Mini.app/Contents/Info.plist
-          codesign --force --sign - "Mini.app" && echo "B_OK" || echo "B_FAIL"
-          echo "=== C: identical content, different bundle name ==="
-          rm -rf GameHub.app && cp -R 5IN1.app GameHub.app
-          codesign --force --sign - "GameHub.app" && echo "C_OK" || echo "C_FAIL"
-          echo "=== D: absolute path ==="
-          codesign --force --sign - "$PWD/5IN1.app" && echo "D_OK" || echo "D_FAIL"
-          echo "=== E: explicit identifier ==="
-          codesign --force --sign - -i com.guessinggame.gui "5IN1.app" && echo "E_OK" || echo "E_FAIL"
-          echo "=== experiments done ==="
+          echo "--- linked libraries (must be system-only) ---"
+          otool -L "5IN1.app/Contents/MacOS/GuessingGame"
+          if otool -L "5IN1.app/Contents/MacOS/GuessingGame" | grep -iE "homebrew|/opt/|@executable_path.*\.dylib"; then
+            echo "ERROR: non-system dylib linkage found"; exit 1
+          fi
+          echo "--- signature ---"
+          codesign -dv "5IN1.app" 2>&1 | head -8
+          /usr/bin/plutil -p "5IN1.app/Contents/Info.plist" | grep -E "CFBundleExecutable|CFBundleShortVersionString"
 
-      # TEMPORARILY DISABLED for the diagnostic run (restored after root cause is found):
-      # - Verify bundle
-      # - Package zip
-      # - Upload artifact
+      - name: Package zip
+        run: |
+          set -euo pipefail
+          ditto -c -k --keepParent "5IN1.app" "5IN1-macOS-v3.1.1.zip"
+          shasum -a 256 "5IN1-macOS-v3.1.1.zip" | tee sha256.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 5IN1-macOS-v3.1.1
+          path: |
+            5IN1-macOS-v3.1.1.zip
+            sha256.txt
