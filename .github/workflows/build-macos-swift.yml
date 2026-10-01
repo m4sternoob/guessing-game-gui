@@ -49,7 +49,15 @@ jobs:
       - name: Ad-hoc sign (after ALL binary changes)
         run: |
           set -euo pipefail
-          codesign --force --deep --sign - "5IN1.app"
+          # No --deep: the bundle contains no nested code (single Mach-O + resources).
+          # Retry loop: macos-15 runners intermittently fail ad-hoc codesign with "No such process".
+          signed=0
+          for i in 1 2 3; do
+            if codesign --force --sign - "5IN1.app"; then signed=1; break; fi
+            echo "codesign attempt $i failed; retrying in 5s..."
+            sleep 5
+          done
+          [ "$signed" = "1" ] || { echo "ERROR: codesign failed after 3 attempts"; exit 1; }
           codesign -v "5IN1.app"
           spctl --assess --type execute "5IN1.app" || true
 
