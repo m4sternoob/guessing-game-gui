@@ -45,16 +45,22 @@ struct ContentView: View {
                 switch activeGame {
                 case .guessing:
                     GuessingGameView()
+                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 case .snake:
                     SnakeGameView()
+                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 case .ladders:
                     SnakesLaddersView()
+                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 case .ludo:
                     LudoView()
+                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 case .tictactoe:
                     TicTacToeView()
+                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 }
             }
+            .animation(.easeInOut(duration: 0.2), value: activeGame)
         }
         .preferredColorScheme(.dark)
         .toolbar {
