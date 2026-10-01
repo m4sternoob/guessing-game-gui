@@ -7,43 +7,48 @@ struct SnakesLaddersView: View {
     @EnvironmentObject private var coordinator: GameCoordinator
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
+        ZStack {
+            VStack(spacing: 0) {
+                header
 
-            Divider()
-                .background(Theme.divider)
+                Divider()
+                    .background(Theme.divider)
 
-            board
-                .padding(16)
+                board
+                    .padding(16)
 
-            HStack(spacing: 20) {
-                DiceView(
-                    value: model.diceValue,
-                    rolling: model.rolling,
-                    enabled: model.turn == .player && model.winner == nil,
-                    onTap: { model.rollDice() }
-                )
+                HStack(spacing: 20) {
+                    DiceView(
+                        value: model.diceValue,
+                        rolling: model.rolling,
+                        enabled: model.turn == .player && model.winner == nil,
+                        onTap: { model.rollDice() }
+                    )
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(model.message)
-                        .font(.headline)
-                        .foregroundColor(Theme.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
-                    HStack(spacing: 8) {
-                        turnDot(isActive: model.turn == .player, color: .blue, label: "You")
-                        turnDot(isActive: model.turn == .cpu, color: .red, label: "CPU")
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(model.message)
+                            .font(.headline)
+                            .foregroundColor(Theme.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        HStack(spacing: 8) {
+                            turnDot(isActive: model.turn == .player, color: .blue, label: "You")
+                            turnDot(isActive: model.turn == .cpu, color: .red, label: "CPU")
+                        }
                     }
+                    Spacer()
                 }
-                Spacer()
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 8)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 8)
 
-            if model.winner != nil {
-                winCard
-            }
+                if model.winner != nil {
+                    winCard
+                }
 
-            Spacer(minLength: 8)
+                Spacer(minLength: 8)
+        }
+        if model.winner == .player {
+            ConfettiView()
+        }
         }
         .onChange(of: coordinator.newGameID) { _, _ in
             model.resetForNewGameCommand()
