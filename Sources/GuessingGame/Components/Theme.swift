@@ -95,6 +95,7 @@ struct ErrorToast: View {
 // Confetti burst shown on win.
 struct ConfettiView: View {
     @State private var particles: [ConfettiParticle] = []
+    @State private var timer: Timer?
 
     struct ConfettiParticle: Identifiable {
         let id = UUID()
@@ -145,11 +146,16 @@ struct ConfettiView: View {
                 }
                 animateParticles(in: geometry.size)
             }
+            .onDisappear {
+                timer?.invalidate()
+                timer = nil
+            }
         }
     }
 
     private func animateParticles(in size: CGSize) {
-        Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { timer in
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { t in
             for i in particles.indices {
                 particles[i].x += particles[i].velocityX / 60.0
                 particles[i].y += particles[i].velocityY / 60.0
@@ -157,7 +163,10 @@ struct ConfettiView: View {
                 particles[i].rotation += Double.random(in: -8...8)
             }
             particles.removeAll { $0.y > size.height + 80 }
-            if particles.isEmpty { timer.invalidate() }
+            if particles.isEmpty {
+                t.invalidate()
+                timer = nil
+            }
         }
     }
 }
