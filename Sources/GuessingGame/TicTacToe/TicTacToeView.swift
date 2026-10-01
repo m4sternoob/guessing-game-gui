@@ -27,16 +27,29 @@ struct TicTacToeView: View {
                         }
                         .frame(maxWidth: 400)
 
-                        Text(model.message)
-                            .font(model.gameOver ? .title2.bold() : .headline)
-                            .foregroundColor(model.winner == .x ? Theme.good
-                                : model.winner == .o ? Theme.danger : Theme.textPrimary)
-                            .animation(.spring(response: 0.35, dampingFraction: 0.6), value: model.gameOver)
+                        if model.cpuThinking {
+                            HStack(spacing: 8) {
+                                Text("CPU is thinking")
+                                    .font(.headline)
+                                    .foregroundColor(Theme.textPrimary)
+                                ThinkingDots()
+                            }
+                            .transition(.opacity)
+                        } else {
+                            Text(model.message)
+                                .font(model.gameOver ? .title2.bold() : .headline)
+                                .foregroundColor(model.winner == .x ? Theme.good
+                                    : model.winner == .o ? Theme.danger : Theme.textPrimary)
+                                .animation(.spring(response: 0.35, dampingFraction: 0.6), value: model.gameOver)
+                        }
 
                         HStack(spacing: 10) {
                             StatPill(icon: "person.fill", text: "You \(model.playerScore)")
                             StatPill(icon: "cpu", text: "CPU \(model.cpuScore)")
                             StatPill(icon: "equal", text: "Draws \(model.draws)")
+                            if model.playerStreak > 0 {
+                                StatPill(icon: "flame.fill", text: "Streak \(model.playerStreak)")
+                            }
                         }
 
                         Button(action: { model.newGame() }) {
@@ -117,5 +130,28 @@ struct TicTacToeView: View {
         .buttonStyle(.plain)
         .animation(.spring(response: 0.3, dampingFraction: 0.55), value: mark)
         .disabled(mark != .empty || model.gameOver)
+    }
+}
+
+// Three dots that pulse in sequence while the CPU picks its move.
+struct ThinkingDots: View {
+    @State private var pulse = false
+
+    var body: some View {
+        HStack(spacing: 5) {
+            ForEach(0..<3) { i in
+                Circle()
+                    .fill(Theme.textSecondary)
+                    .frame(width: 7, height: 7)
+                    .opacity(pulse ? 1 : 0.25)
+                    .animation(
+                        .easeInOut(duration: 0.45)
+                            .repeatForever(autoreverses: true)
+                            .delay(Double(i) * 0.15),
+                        value: pulse
+                    )
+            }
+        }
+        .onAppear { pulse = true }
     }
 }

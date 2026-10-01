@@ -19,6 +19,14 @@ final class TicTacToeModel: ObservableObject {
     @Published var playerScore = 0
     @Published var cpuScore = 0
     @Published var draws = 0
+    /// True while the CPU's move is scheduled but not yet played — drives the
+    /// animated "thinking" indicator.
+    @Published var cpuThinking = false
+    /// Consecutive player wins. Persisted; a loss or draw resets it.
+    /// willSet publishes — @AppStorage alone doesn't emit objectWillChange.
+    @AppStorage("gg3-ttt-streak") var playerStreak = 0 {
+        willSet { objectWillChange.send() }
+    }
 
     /// Bumps on every newGame(); a stale scheduled CPU move bails when it mismatches.
     private var generation = 0
@@ -37,6 +45,7 @@ final class TicTacToeModel: ObservableObject {
         winner = nil
         isDraw = false
         winningLine = nil
+        cpuThinking = false
         message = "Your turn — you're X."
     }
 
@@ -50,8 +59,10 @@ final class TicTacToeModel: ObservableObject {
     func tap(_ i: Int) {
         guard board[i] == .empty, !gameOver else { return }
         board[i] = .x
+        SoundFX.shared.play(.tap)
         afterMove()
         if !gameOver {
+            cpuThinking = true
             let gen = generation
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
                 guard let self, gen == self.generation else { return }
@@ -80,6 +91,7 @@ final class TicTacToeModel: ObservableObject {
     }
 
     private func cpuMove() {
+        cpuThinking = false
         guard !gameOver else { return }
         let empties = board.indices.filter { board[$0] == .empty }
         guard let pick = empties.randomElement() else { return }
@@ -153,12 +165,17 @@ final class TicTacToeModel: ObservableObject {
     private func recordResult() {
         if winner == .x {
             playerScore += 1
+            playerStreak += 1
             UserDefaults.standard.set(playerScore, forKey: "gg3-ttt-player")
+            SoundFX.shared.play(.win)
         } else if winner == .o {
             cpuScore += 1
+            playerStreak = 0
             UserDefaults.standard.set(cpuScore, forKey: "gg3-ttt-cpu")
+            SoundFX.shared.play(.lose)
         } else {
             draws += 1
+            playerStreak = 0
             UserDefaults.standard.set(draws, forKey: "gg3-ttt-draws")
         }
     }
