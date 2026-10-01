@@ -35,6 +35,7 @@ enum ActiveGame: String, CaseIterable, Identifiable {
 
 struct ContentView: View {
     @State private var activeGame: ActiveGame = .guessing
+    @ObservedObject private var sound = SoundFX.shared
 
     var body: some View {
         ZStack {
@@ -72,6 +73,14 @@ struct ContentView: View {
                 }
                 .pickerStyle(.segmented)
                 .frame(width: 460)
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    sound.isEnabled.toggle()
+                } label: {
+                    Image(systemName: sound.isEnabled ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                }
+                .help(sound.isEnabled ? "Mute sound effects" : "Enable sound effects")
             }
         }
     }
