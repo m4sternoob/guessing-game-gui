@@ -6,7 +6,7 @@
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-macOS-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-macOS%2014%2B-lightgrey.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/Version-v3.1.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-v3.1.1-brightgreen.svg)
 
 **Five games, one native macOS app — built with SwiftUI + SpriteKit, zero dependencies.**
 
@@ -16,7 +16,7 @@
 
 ---
 
-## What's new in v3.1.0
+## What's new in v3.1.1
 
 5IN1 grows from two games to **five**: Snakes & Ladders, Ludo (you vs the CPU),
 and Tic-Tac-Toe join the Guessing Game and Snake. One window, one toolbar switcher,
@@ -65,7 +65,7 @@ in whichever game is active.
 Grab the latest `.zip` from the [**Releases**](https://github.com/m4sternoob/guessing-game-gui/releases) page,
 unzip, and open `5IN1.app`. Requires macOS 14 (Sonoma) or later, Apple Silicon or Intel.
 
-> The v3.1.0 release build is being finalized — it will appear on the Releases page once published.
+> The v3.1.1 release build is being finalized — it will appear on the Releases page once published.
 
 ## 🔨 Build from source
 
@@ -114,7 +114,7 @@ source/ios/                    # iOS/SwiftUI version (separate target)
 
 ## 📜 Version history
 
-- **v3.1.0** — five-game 5IN1: + Snakes & Ladders, Ludo, Tic-Tac-Toe; guessing hot/cold meter; snake wrap mode + juice
+- **v3.1.1** — five-game 5IN1: + Snakes & Ladders, Ludo, Tic-Tac-Toe; guessing hot/cold meter; snake wrap mode + juice
 - **v3.0.0** — from-scratch native macOS rewrite (Swift/SwiftUI/SpriteKit)
 - **v2.5.x** — C++/SDL2 builds (broken, superseded)
 - **v1.0.0 / v2.0.0** — early C++/SDL2 builds (ran on dev machine only)
