@@ -147,7 +147,10 @@ final class GuessModel: ObservableObject {
     /// yyyymmdd — the daily challenge seed. Same number for everyone, all day.
     private var dailySeed: UInt64 {
         let c = Calendar.current.dateComponents([.year, .month, .day], from: Date())
-        return UInt64((c.year ?? 0) * 10_000 + (c.month ?? 0) * 100 + (c.day ?? 0))
+        let y = c.year ?? 0
+        let m = c.month ?? 0
+        let d = c.day ?? 0
+        return UInt64(y * 10_000 + m * 100 + d)
     }
 
     private static let dayFormatter: DateFormatter = {
@@ -198,9 +201,12 @@ final class GuessModel: ObservableObject {
         possibleHi = hi
         minText = "\(lo)"
         maxText = "\(hi)"
-        secret = dailyMode
-            ? SeededRNG(seed: dailySeed).nextInt(in: lo...hi)
-            : Int.random(in: lo...hi)
+        if dailyMode {
+            var rng = SeededRNG(seed: dailySeed)
+            secret = rng.nextInt(in: lo...hi)
+        } else {
+            secret = Int.random(in: lo...hi)
+        }
         attempts = []
         guessText = ""
         errorMessage = nil
