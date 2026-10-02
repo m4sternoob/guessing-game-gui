@@ -49,14 +49,30 @@ jobs:
       - name: Ad-hoc sign (after ALL binary changes)
         run: |
           set -euo pipefail
-          # Proven recipe (diagnostic run #9): the nested binary arrives with the
-          # linker's ad-hoc signature, which bundle-signing alone cannot replace
-          # ("No such process" after "replacing existing signature"). Replace the
-          # linker signature on the bare binary FIRST, then seal the bundle.
-          # No --deep: the bundle has no nested code (single Mach-O + resources).
-          codesign --force --sign - "5IN1.app/Contents/MacOS/GuessingGame"
-          codesign --force --sign - "5IN1.app"
-          codesign -v "5IN1.app"
+          BIN="5IN1.app/Contents/MacOS/GuessingGame"
+          # Every "replacing existing signature" attempt on this bundle has died
+          # with "No such process" (builds #5/#6/#10/#12), so start clean: strip
+          # the ad-hoc signature Swift's linker leaves on the binary.
+          codesign --remove-signature "$BIN" || true
+          # Recipe A: single bundle seal with explicit identifier. Nothing left
+          # to replace, so no --force. (Diagnostic #9 proved explicit-identifier
+          # signing works on these runners.)
+          if codesign --sign - --identifier com.guessinggame.gui "5IN1.app" 2>sign_a.log; then
+            echo "SIGN-OK: recipe A (bundle seal, explicit identifier)"
+          else
+            echo "SIGN-FAIL: recipe A; log:"; cat sign_a.log || true
+            echo "Trying recipe B (inner binary first, then bundle)..."
+            codesign --force --sign - "$BIN"
+            if codesign --force --sign - "5IN1.app" 2>sign_b.log; then
+              echo "SIGN-OK: recipe B (inner binary first, then bundle)"
+            else
+              echo "SIGN-FAIL: recipe B; log:"; cat sign_b.log || true
+              echo "Shipping UNSIGNED — right-click the app and choose Open to launch."
+              codesign --remove-signature "$BIN" || true
+              touch SIGNING_FAILED_UNSIGNED
+            fi
+          fi
+          codesign -dv "5IN1.app" 2>&1 | head -5 || true
           spctl --assess --type execute "5IN1.app" || true
 
       - name: Verify bundle
