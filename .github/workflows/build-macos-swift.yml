@@ -50,30 +50,50 @@ jobs:
         run: |
           set -euo pipefail
           BIN="5IN1.app/Contents/MacOS/GuessingGame"
-          # Every "replacing existing signature" attempt on this bundle has died
-          # with "No such process" (builds #5/#6/#10/#12), so start clean: strip
-          # the ad-hoc signature Swift's linker leaves on the binary.
+          APP="5IN1.app"
+          # True only if the bundle actually carries a signature right now.
+          # (Build #13 proved codesign can exit 0 while writing nothing, so
+          # never trust the exit code alone.)
+          has_sig() { codesign -dv "$APP" >/dev/null 2>&1; }
+          # Clean slate: strip the ad-hoc signature Swift's linker leaves.
           codesign --remove-signature "$BIN" || true
-          # Recipe A: single bundle seal with explicit identifier. Nothing left
-          # to replace, so no --force. (Diagnostic #9 proved explicit-identifier
-          # signing works on these runners.)
-          if codesign --sign - --identifier com.guessinggame.gui "5IN1.app" 2>sign_a.log; then
-            echo "SIGN-OK: recipe A (bundle seal, explicit identifier)"
+          SIGNED=""
+
+          echo "--- recipe A: bundle seal, explicit identifier ---"
+          if codesign --sign - --identifier com.guessinggame.gui "$APP" 2>sign.log && has_sig; then
+            SIGNED="A"
           else
-            echo "SIGN-FAIL: recipe A; log:"; cat sign_a.log || true
-            echo "Trying recipe B (inner binary first, then bundle)..."
-            codesign --force --sign - "$BIN"
-            if codesign --force --sign - "5IN1.app" 2>sign_b.log; then
-              echo "SIGN-OK: recipe B (inner binary first, then bundle)"
+            echo "A failed:"; cat sign.log || true
+            echo "--- recipe B: bundle, --force, no identifier ---"
+            if codesign --force --sign - "$APP" 2>sign.log && has_sig; then
+              SIGNED="B"
             else
-              echo "SIGN-FAIL: recipe B; log:"; cat sign_b.log || true
-              echo "Shipping UNSIGNED — right-click the app and choose Open to launch."
-              codesign --remove-signature "$BIN" || true
-              touch SIGNING_FAILED_UNSIGNED
+              echo "B failed:"; cat sign.log || true
+              echo "--- recipe C: --force --deep (build #3's GameHub recipe) ---"
+              if codesign --force --deep --sign - "$APP" 2>sign.log && has_sig; then
+                SIGNED="C"
+              else
+                echo "C failed:"; cat sign.log || true
+                echo "--- recipe D: inner binary first, then bundle ---"
+                codesign --force --sign - "$BIN" >/dev/null 2>&1 || true
+                if codesign --force --sign - "$APP" 2>sign.log && has_sig; then
+                  SIGNED="D"
+                else
+                  echo "D failed:"; cat sign.log || true
+                fi
+              fi
             fi
           fi
-          codesign -dv "5IN1.app" 2>&1 | head -5 || true
-          spctl --assess --type execute "5IN1.app" || true
+
+          if [ -n "$SIGNED" ]; then
+            echo "SIGN-OK: recipe $SIGNED (signature verified present)"
+          else
+            echo "ALL RECIPES FAILED — shipping UNSIGNED (right-click the app and choose Open to launch)"
+            codesign --remove-signature "$BIN" || true
+            touch SIGNING_FAILED_UNSIGNED
+          fi
+          codesign -dv "$APP" 2>&1 | head -5 || true
+          spctl --assess --type execute "$APP" || true
 
       - name: Verify bundle
         run: |
@@ -83,8 +103,8 @@ jobs:
           if otool -L "5IN1.app/Contents/MacOS/GuessingGame" | grep -iE "homebrew|/opt/|@executable_path.*\.dylib"; then
             echo "ERROR: non-system dylib linkage found"; exit 1
           fi
-          echo "--- signature ---"
-          codesign -dv "5IN1.app" 2>&1 | head -8
+          echo "--- signature (may be unsigned; see sign step) ---"
+          codesign -dv "5IN1.app" 2>&1 | head -8 || true
           /usr/bin/plutil -p "5IN1.app/Contents/Info.plist" | grep -E "CFBundleExecutable|CFBundleShortVersionString"
 
       - name: Package zip
